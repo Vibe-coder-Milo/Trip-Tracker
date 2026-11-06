@@ -1,0 +1,28 @@
+[
+ {
+  "mode": "redesign",
+  "depth": "full",
+  "scope": "app",
+  "shape": "app screen",
+  "theme": "atelier",
+  "axes": "light/roman-serif/cool",
+  "hero": "none (app)",
+  "nav": "quiet top bar, four text tabs",
+  "footer": "one line of backup links",
+  "imagery": "none; the world map and trip map are data maps",
+  "photos": [],
+  "entry": "Home world map",
+  "fingerprint": "app/atelier/topbar/ruled-tables",
+  "sections": [
+   "Home",
+   "Overview",
+   "Itinerary",
+   "Budget",
+   "Settings"
+  ],
+  "signature": "the day as a ruled timetable",
+  "waived": [],
+  "prompt": "a personal trip planner one traveller uses on iPad to plan days, places, hotels, flights, a map and spending for each trip",
+  "date": "2026-11-06"
+ }
+]
