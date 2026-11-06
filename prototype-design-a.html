@@ -188,6 +188,10 @@ textarea.inp{ min-height:52px; resize:vertical; line-height:1.45; }
 .ov-stub{ background:var(--navy); color:var(--on-navy); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; padding:12px 6px; border-right:2px dashed rgba(241,233,212,.35); }
 .ov-stub small{ font-family:var(--mono); font-size:.75rem; color:var(--brass); letter-spacing:.08em; }
 .ov-stub b{ font-family:var(--mono); font-size:1.625rem; }
+.ov-stub{ justify-content:space-between; }
+.mv{ width:44px; height:40px; border-radius:10px; border:1.5px solid rgba(241,233,212,.35); background:transparent; color:var(--on-navy); font-size:.875rem; }
+.mv:disabled{ opacity:.25; cursor:default; }
+.btn:disabled{ opacity:.4; cursor:default; }
 .ov-body{ padding:16px 20px; display:flex; flex-direction:column; gap:10px; min-width:0; }
 .ov-head{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:baseline; }
 .ov-head h3{ font-size:1.25rem; }
@@ -683,7 +687,7 @@ function overviewCards(){
     const noted = d.places.filter(p => p.note && p.type !== 'flight');
     const isToday = i === tripDayIndex();
     return `<article class="ov-card" data-day="${i}">
-      <div class="ov-stub"><small>${isToday ? 'TODAY' : 'DAY'}</small><b>${String(i + 1).padStart(2, '0')}</b></div>
+      <div class="ov-stub"><button type="button" class="mv" data-act="moveday" data-i="${i}" data-d="-1" aria-label="Move Day ${i + 1} earlier" ${i === 0 ? 'disabled' : ''}>▲</button><small>${isToday ? 'TODAY' : 'DAY'}</small><b>${String(i + 1).padStart(2, '0')}</b><button type="button" class="mv" data-act="moveday" data-i="${i}" data-d="1" aria-label="Move Day ${i + 1} later" ${i === TRIP.days.length - 1 ? 'disabled' : ''}>▼</button></div>
       <div class="ov-body">
         <div class="ov-head"><h3><button type="button" class="linkbtn" style="font:inherit;color:inherit;text-decoration:none;padding:0" data-act="day" data-i="${i}">${esc(d.city) || 'Where to?'} ›</button></h3><span class="d">${dLong(d.date)}</span></div>
         ${(hotels.length || flights.length) ? `<div class="ov-meta">${hotels.map(h => `<span>🏨 ${esc(h)}</span>`).join('')}${flights.map(f => `<span>✈️ ${esc(f.name)} · ${f.dep} → ${f.arr}</span>`).join('')}</div>` : ''}
@@ -734,10 +738,9 @@ function tripLayout(all){
   let left;
   if(all){
     const tt = totals();
-    left = `<div class="stack"><section class="card"><div class="ov-sum" style="grid-template-columns:1fr;gap:18px"><div><p class="muted small">Total spent (in ${TRIP.base})</p><div class="total">${fmt(TRIP.base, tt.all)}</div><p class="small muted">Example rates · S$1 = ¥115</p></div>
+    left = `<div class="stack"><section class="card"><div class="spread" style="margin-bottom:16px"><h2>Trip summary</h2><button type="button" class="btn small ghost" data-act="toast" data-m="Opens the print dialog so you can save the overview as a PDF (works in the real app)">🖨️ Save as PDF</button></div><div class="ov-sum"><div><p class="muted small">Total spent (in ${TRIP.base})</p><div class="total">${fmt(TRIP.base, tt.all)}</div><p class="small muted">Example rates · S$1 = ¥115</p></div>
         <div class="bars">${CATS.filter(c => tt.by[c.k]).map(c => `<div class="bar"><span>${c.ic} ${c.k}</span><span class="track"><span class="fill" style="width:${(tt.by[c.k] / tt.all * 100).toFixed(1)}%;background:${c.color}"></span></span><span class="v">${fmt(TRIP.base, tt.by[c.k])}</span></div>`).join('')}</div></div></section>
-      <div class="spread"><h1 style="font-size:1.75rem">Day by day</h1><div class="row"><button type="button" class="btn small ghost" data-act="toast" data-m="Opens the print dialog so you can save the itinerary as a PDF (works in the real app)">🖨️ Save as PDF</button><button type="button" class="btn small" data-act="dialog" data-d="add">+ Add</button></div></div>
-      <p class="tip">Press and drag a place to reorder it, or drop it on another day to move it there. Tap a day's name to edit it in Itinerary. Numbers match the map pins.</p>
+      <p class="tip">Press and drag a place to reorder it, or drop it on another day to move it there. Use ▲ ▼ beside a day to move the whole day. Tap a day's name to edit it in Itinerary.</p>
       <div class="ov-list">${overviewCards()}</div></div>`;
   } else {
     const i = S.day; const d = TRIP.days[i]; const nums = numbering();
@@ -755,10 +758,11 @@ function tripLayout(all){
           <div class="sec"><h3>Timings & transport</h3>${d.times.map((t, k) => `<div class="trow"><input type="time" class="inp slim" data-in="ttime" data-k="${k}" value="${t.t}" aria-label="Time"><input class="inp slim" data-in="tdesc" data-k="${k}" value="${esc(t.d)}" placeholder="Grab to airport, meet driver at lobby" aria-label="What happens"><button type="button" class="x" data-act="deltime" data-k="${k}" aria-label="Remove timing">✕</button></div>`).join('')}
             <button type="button" class="linkbtn" data-act="addtime">+ Add a timing</button></div>
           <div class="field"><label for="dnotes">Notes</label><textarea id="dnotes" class="inp" rows="2" data-in="dnotes" placeholder="Anything else to remember">${esc(d.notes)}</textarea></div>
-          <div><button type="button" class="btn small danger" data-act="askdelday">Delete Day ${i + 1}</button></div>
+          <div class="row"><button type="button" class="btn small ghost" data-act="moveday" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''}>◀ Move day earlier</button><button type="button" class="btn small ghost" data-act="moveday" data-i="${i}" data-d="1" ${i === TRIP.days.length - 1 ? 'disabled' : ''}>Move day later ▶</button><button type="button" class="btn small danger" data-act="askdelday">Delete Day ${i + 1}</button></div>
         </div></article></div>`;
   }
-  return `${all ? '' : `<div class="daytabs">${tabs}</div>`}<div class="it-grid">${left}${mapAside(all)}</div>`;
+  if(all) return left;
+  return `<div class="daytabs">${tabs}</div><div class="it-grid">${left}${mapAside(false)}</div>`;
 }
 function addPanelHTML(i){
   const t = S.addType; const di = S.addDay != null ? S.addDay : i;
@@ -965,6 +969,14 @@ document.addEventListener('click', e => {
     case 'addday': { const last = TRIP.days[TRIP.days.length - 1]; TRIP.days.push(D(addDaysISO(last.date, 1), '', '', [], [])); S.day = TRIP.days.length - 1; toast(`Added Day ${TRIP.days.length} · ${dLong(TRIP.days[S.day].date)} (the day after the last one)`); } break;
     case 'askdelday': { const i = S.day; confirmBox(`Delete Day ${i + 1}?`, `Its places, hotel, flights, timings and notes will be removed.`, 'Delete day', () => { TRIP.days.splice(i, 1); S.day = Math.max(0, i - 1); toast(`Deleted Day ${i + 1}`); render(); }); } return;
     case 'delplace': { const f = findPlace(el.dataset.id); f.d.places.splice(f.i, 1); toast(`Removed ${f.p.name}`); } break;
+    case 'moveday': {
+      const i = +el.dataset.i, j = i + +el.dataset.d; if(j < 0 || j >= TRIP.days.length) return;
+      const dates = TRIP.days.map(d => d.date);            // dates stay in order; the plans swap
+      [TRIP.days[i], TRIP.days[j]] = [TRIP.days[j], TRIP.days[i]];
+      TRIP.days.forEach((d, k) => d.date = dates[k]);
+      if(S.screen === 'itinerary') S.day = j;
+      toast(`Moved ${TRIP.days[j].city || 'the day'} to Day ${j + 1} · dates stay in order`);
+    } break;
     case 'addtime': TRIP.days[S.day].times.push({ t:'', d:'' }); break;
     case 'deltime': TRIP.days[S.day].times.splice(+el.dataset.k, 1); break;
     case 'atype': S.addType = el.dataset.t; S.wiki = null; break;
