@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Trip Tracker">
-<title>Trip Tracker</title>
+<title>Trip Tracker Polished</title>
 <meta name="description" content="Plan each trip day by day: places, hotels, flights, a map and spending in Singapore dollars.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,11 +50,55 @@
   --color-map-arc: oklch(47% 0.1 195 / 0.7);
 }
 
+/* page roles shared by both themes */
+:root {
+  --color-page: oklch(95.2% 0.009 240); --color-section: oklch(99.9% 0.002 235); --section-edge: oklch(88.5% 0.01 245);
+  --section-shadow: 0 1px 2px oklch(25% 0.02 255 / 0.05), 0 4px 14px -6px oklch(25% 0.02 255 / 0.12);
+  --nextup-bg: var(--color-ink); --nextup-fg: var(--color-paper); --nextup-sub: var(--color-paper-3); --nextup-edge: var(--color-ink);
+  --color-bar: oklch(99.9% 0.002 235);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --color-paper: oklch(17.5% 0.014 250); --color-paper-2: oklch(25% 0.016 250); --color-paper-3: oklch(31% 0.016 250);
+  --color-ink: oklch(96% 0.006 250); --color-ink-2: oklch(87% 0.01 250); --color-muted: oklch(74% 0.014 250);
+  --color-rule: oklch(32% 0.014 250); --color-edge: oklch(56% 0.016 250);
+  --color-accent: oklch(74% 0.11 190); --color-accent-strong: oklch(81% 0.1 190); --color-accent-ink: oklch(19% 0.03 200); --color-accent-wash: oklch(29% 0.045 200); --color-focus: oklch(76% 0.13 245);
+  --color-card: oklch(23% 0.016 250); --color-card-edge: oklch(34% 0.016 250); --color-pencil: oklch(74% 0.014 250);
+  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(73% 0.14 32); --cat-food: oklch(80% 0.13 75); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255);
+  --color-error: oklch(72% 0.16 27); --color-success: oklch(76% 0.13 155); --color-warn: oklch(80% 0.12 75);
+  --color-warn-wash: oklch(29% 0.05 75); --color-error-wash: oklch(29% 0.05 27);
+  --color-map-sea: oklch(26% 0.035 235); --color-map-land: oklch(36% 0.012 250); --color-map-edge: oklch(46% 0.02 235); --color-map-arc: oklch(74% 0.11 190 / 0.75);
+  --color-overlay: oklch(8% 0.01 250 / 0.65);
+  --shadow-card: 0 0 0 1px oklch(40% 0.016 250), 0 12px 32px -12px oklch(5% 0 0 / 0.6);
+  --color-page: oklch(15% 0.013 250); --color-section: oklch(21% 0.016 250); --section-edge: oklch(31% 0.016 250);
+  --section-shadow: none;
+  --nextup-bg: var(--color-accent-wash); --nextup-fg: var(--color-ink); --nextup-sub: var(--color-ink-2); --nextup-edge: var(--color-accent);
+  --color-bar: oklch(19% 0.015 250);
+} }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: oklch(17.5% 0.014 250); --color-paper-2: oklch(25% 0.016 250); --color-paper-3: oklch(31% 0.016 250);
+  --color-ink: oklch(96% 0.006 250); --color-ink-2: oklch(87% 0.01 250); --color-muted: oklch(74% 0.014 250);
+  --color-rule: oklch(32% 0.014 250); --color-edge: oklch(56% 0.016 250);
+  --color-accent: oklch(74% 0.11 190); --color-accent-strong: oklch(81% 0.1 190); --color-accent-ink: oklch(19% 0.03 200); --color-accent-wash: oklch(29% 0.045 200); --color-focus: oklch(76% 0.13 245);
+  --color-card: oklch(23% 0.016 250); --color-card-edge: oklch(34% 0.016 250); --color-pencil: oklch(74% 0.014 250);
+  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(73% 0.14 32); --cat-food: oklch(80% 0.13 75); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255);
+  --color-error: oklch(72% 0.16 27); --color-success: oklch(76% 0.13 155); --color-warn: oklch(80% 0.12 75);
+  --color-warn-wash: oklch(29% 0.05 75); --color-error-wash: oklch(29% 0.05 27);
+  --color-map-sea: oklch(26% 0.035 235); --color-map-land: oklch(36% 0.012 250); --color-map-edge: oklch(46% 0.02 235); --color-map-arc: oklch(74% 0.11 190 / 0.75);
+  --color-overlay: oklch(8% 0.01 250 / 0.65);
+  --shadow-card: 0 0 0 1px oklch(40% 0.016 250), 0 12px 32px -12px oklch(5% 0 0 / 0.6);
+  --color-page: oklch(15% 0.013 250); --color-section: oklch(21% 0.016 250); --section-edge: oklch(31% 0.016 250);
+  --section-shadow: none;
+  --nextup-bg: var(--color-accent-wash); --nextup-fg: var(--color-ink); --nextup-sub: var(--color-ink-2); --nextup-edge: var(--color-accent);
+  --color-bar: oklch(19% 0.015 250);
+}
+
 /* ===== base (scaffolded) ===== */
 *, *::before, *::after { box-sizing: border-box; }
 html, body { overflow-x: clip; }
 html { font-size: calc(106.25% * var(--scale)); scrollbar-color: var(--color-muted) var(--color-paper); scroll-padding-top: var(--space-3xl); }
-body { margin: 0; background: var(--color-paper); color: var(--color-ink-2); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent); }
+body { margin: 0; background: var(--color-page); color: var(--color-ink-2); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; -webkit-font-smoothing: antialiased; caret-color: var(--color-accent); }
 ::selection { background: color-mix(in oklab, var(--color-accent) 22%, transparent); color: var(--color-ink); }
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 0.16em; }
@@ -114,8 +158,8 @@ textarea.line { resize: vertical; min-height: var(--control-h); line-height: 1.5
 
 /* ===== shell ===== */
 .wrap { width: 100%; max-width: var(--container); margin-inline: auto; padding-inline: max(var(--gutter), env(safe-area-inset-left, 0px)) max(var(--gutter), env(safe-area-inset-right, 0px)); }
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: var(--z-sticky-nav); background: var(--color-paper); border-bottom: 1px solid var(--color-rule); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: var(--z-sticky-nav); background: var(--color-paper); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: var(--z-sticky-nav); background: var(--color-bar); border-bottom: 1px solid var(--color-rule); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: var(--z-sticky-nav); background: var(--color-bar); }
 .bar-in { display: flex; align-items: center; gap: var(--space-lg); min-height: var(--bar-h); }
 .wordmark { display: inline-flex; align-items: center; gap: var(--space-xs); min-height: 44px; padding: 0; border: 0; background: none; font-family: var(--font-display); font-size: var(--text-lg); color: var(--color-ink); cursor: pointer; white-space: nowrap; }
 .wordmark .ic { width: 22px; height: 22px; color: var(--color-accent); }
@@ -412,7 +456,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .badge.plain { color: var(--color-ink-2); border-color: var(--color-edge); }
 .pchip .n.c-attraction, .pchip .n.c-food { background: var(--cat); color: var(--color-accent-ink); }
 .daynote { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-ink); }
-.disclose { border-top: 1px solid var(--color-rule); padding-top: var(--space-md); }
+.disclose { padding-block: var(--space-xs); }
 .disclose > summary { display: inline-flex; align-items: center; gap: var(--space-xs); min-height: 44px; cursor: pointer; color: var(--color-ink); font-weight: 500; list-style: none; }
 .disclose > summary::-webkit-details-marker { display: none; }
 .disclose > summary:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
@@ -430,6 +474,36 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 @media (max-width: 60rem) { .tabs { gap: var(--space-md); } .syncbtn .syncshort { display: inline; } .setbtn .synctext { display: none; } }
 @media (max-width: 40rem) { .ledger { min-width: 0; } .item { grid-template-columns: 24px 32px minmax(0, 1fr); } .item-acts { grid-column: 3; } }
 
+/* ===== panels: every section is its own bounded box ===== */
+.box { background: var(--color-section); border: 1px solid var(--section-edge); border-radius: 14px; box-shadow: var(--section-shadow); padding: var(--space-lg); min-width: 0; }
+.box > .sechead { margin: calc(var(--space-lg) * -1) calc(var(--space-lg) * -1) var(--space-md); padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--section-edge); align-items: center; }
+.box > .sechead h2, .box > .sechead h3 { display: inline-flex; align-items: center; gap: var(--space-xs); font-size: var(--text-title); }
+.box > .sechead .ic { color: var(--color-accent); }
+.box .ruled { border-top: 0; }
+.box .ruled > li:last-child { border-bottom: 0; }
+.box .empty { padding-block: var(--space-xs); }
+.box .world { border: 0; border-radius: 8px; overflow: hidden; }
+.box.set { border-top: 1px solid var(--section-edge); padding-top: var(--space-lg); }
+.plan { gap: var(--space-lg); }
+.pagehead { border-bottom: 0; padding-bottom: 0; }
+.daylist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-md); }
+.daylist > li.ov-day { background: var(--color-section); border: 1px solid var(--section-edge); border-radius: 14px; box-shadow: var(--section-shadow); padding: var(--space-lg); }
+.daylist > li.ov-day.drop { background: var(--color-drop); border-color: var(--color-accent); }
+.ov-when { padding-right: var(--space-md); border-right: 1px solid var(--section-edge); }
+@media (max-width: 40rem) { .ov-when { border-right: 0; padding-right: 0; } .box { padding: var(--space-md); } .box > .sechead { margin: calc(var(--space-md) * -1) calc(var(--space-md) * -1) var(--space-md); padding: var(--space-sm) var(--space-md); } }
+.daynote { background: var(--color-section); border: 1px solid var(--section-edge); }
+.mapcol.box { gap: var(--space-md); }
+.mapcol .tripmap { border: 0; border-radius: 8px; }
+.nextup { background: var(--nextup-bg); color: var(--nextup-fg); border: 1px solid var(--nextup-edge); }
+.nextup .t, .nextup .what b { color: var(--nextup-fg); } .nextup .what span { color: var(--nextup-sub); }
+.nextup .btn { border-color: var(--nextup-sub); color: var(--nextup-fg); }
+@media (hover: hover) { .nextup .btn:hover:not(:disabled) { background: var(--nextup-fg); color: var(--nextup-bg); } }
+.panel { border-radius: 14px; }
+.todayband { border-radius: 14px; }
+.input, .item-tools select { background: var(--color-paper); }
+.proto .pl { white-space: nowrap; }
+.proto .sep { width: 1px; align-self: stretch; background: var(--color-muted); margin-inline: var(--space-2xs); }
+
 /* ===== mockup control, not part of the design ===== */
 .proto { position: fixed; left: 50%; bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-tooltip); transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-xs); max-width: calc(100% - 24px); padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-md); border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-paper-3); font-size: var(--text-sm); box-shadow: var(--shadow-card); }
 .proto button { min-height: 36px; padding: 0 var(--space-sm); border: 1px solid var(--color-muted); border-radius: var(--radius-pill); background: transparent; color: var(--color-paper); font-size: var(--text-sm); white-space: nowrap; cursor: pointer; }
@@ -437,6 +511,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .proto button:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 2px; }
 .proto button:active { transform: translateY(1px); }
 @media (max-width: 34rem) { .proto .pl { display: none; } }
+@media (max-width: 26rem) { .proto button { padding: 0 var(--space-xs); } }
 </style>
 </head>
 <body>
@@ -464,16 +539,20 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
   <symbol id="i-gear" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
 </svg>
 
 <div id="app"></div>
-<div class="proto" role="toolbar" aria-label="Mockup control: pretend date">
-  <span class="pl">Mockup, pretend today is</span>
+<div class="proto" role="toolbar" aria-label="Mockup controls: pretend date and theme">
+  <span class="pl">Mockup</span>
   <button type="button" data-act="pretend" data-v="before" id="pbBefore">6 November</button>
   <button type="button" data-act="pretend" data-v="during" id="pbDuring">21 November, on the trip</button>
+  <span class="sep" aria-hidden="true"></span>
+  <button type="button" data-act="theme" data-v="light" id="pbLight">Light</button>
+  <button type="button" data-act="theme" data-v="dark" id="pbDark">Dark</button>
 </div>
 <div class="visually-hidden" role="status" aria-live="polite" id="live"></div>
 
@@ -590,7 +669,7 @@ const S = {
   mapFocus:null, mapPopup:null, picking:null,
   addType:'activity', addCat:'attraction', addMode:'search', q:'', picked:null, link:'', addDay:null, hFrom:null, hTo:null, fName:'', fDep:'', fArr:'', addNote:'', wiki:null,
   draft:{ cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'2' }, editing:null,
-  pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
+  theme:'auto', pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
 };
 
 /* ===== helpers ===== */
@@ -797,13 +876,13 @@ function scrHome(){
       <td><button type="button" class="iconbtn" data-act="askdeltrip" data-id="${t.id}" aria-label="Delete ${esc(t.name)}">${I('x')}</button></td></tr>`;
   }).join('');
   return `<div class="screen">${syncBanner()}${band}
-    <section class="worldfig" aria-labelledby="h-world">
+    <section class="worldfig box" aria-labelledby="h-world">
       <div class="home-head"><div><h1 id="h-world">Where you've been</h1><p class="lead">Every trip so far, with home in Singapore at the centre.</p></div>
         <ul class="legend" aria-label="Map key"><li><span class="key"></span>Visited</li><li><span class="key up"></span>Coming up</li><li><span class="key home"></span>Home</li></ul></div>
       ${worldMap()}
       <dl class="stats"><div><dt>Countries</dt><dd>${countries.size}</dd></div><div><dt>Cities</dt><dd>${cities.size}</dd></div><div><dt>Days away</dt><dd>${daysAway}</dd></div><div><dt>Trips</dt><dd>${past.length}</dd></div></dl>
     </section>
-    <section aria-labelledby="h-trips"><div class="sechead"><h2 id="h-trips">Your trips</h2><div class="chips"><button type="button" class="btn" data-act="dialog" data-d="past">${I('plus','sm')}Add a past trip</button><button type="button" class="btn btn--primary" data-act="dialog" data-d="newtrip">${I('plus','sm')}New trip</button></div></div>
+    <section class="box" aria-labelledby="h-trips"><div class="sechead"><h2 id="h-trips">${I('plane')}Your trips</h2><div class="chips"><button type="button" class="btn" data-act="dialog" data-d="past">${I('plus','sm')}Add a past trip</button><button type="button" class="btn btn--primary" data-act="dialog" data-d="newtrip">${I('plus','sm')}New trip</button></div></div>
       <div class="tablewrap"><table class="trips"><thead><tr><th scope="col">Trip</th><th scope="col">Dates</th><th scope="col">Cities</th><th scope="col">Status</th><th scope="col"><span class="visually-hidden">Delete</span></th></tr></thead><tbody>${rows}</tbody></table></div>
       <p class="sub" style="margin-top:var(--space-md)">Map only means the trip just places its cities. Open it to plan it day by day.</p>
     </section></div>`;
@@ -831,13 +910,13 @@ function scrOverview(){
     </li>`;
   }).join('');
   return `<div class="screen">${syncBanner()}${pageHead()}
-    <section class="summary" aria-labelledby="h-spent">
+    <section class="summary box" aria-labelledby="h-spent">
       <div><h2 id="h-spent" class="visually-hidden">Spending</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">Example rate: S$1 = ¥115</p></div>
       <dl class="bars">${cats.map(c => `<dt><span class="cat-ic c-${CATKEY[c.k]}">${I(c.ic,'sm')}</span>${c.k}</dt><dd><span class="track"><span class="fill c-${CATKEY[c.k]}" style="width:${(t.by[c.k] / t.all * 100).toFixed(1)}%"></span></span></dd><dd class="v">${fmt(TRIP.base, t.by[c.k])}</dd>`).join('')}</dl>
     </section>
     <section aria-labelledby="h-days"><div class="sechead"><h2 id="h-days">Day by day</h2><button type="button" class="btn btn--quiet" data-act="toast" data-m="Opens the print dialog so you can save this overview as a PDF in the real app.">${I('print','sm')}Save as PDF</button></div>
       <p class="sub" style="margin-bottom:var(--space-md)">Drag a place to reorder it or move it to another day. The arrows move a whole day; dates stay in order.</p>
-      <ol class="ruled">${days}</ol></section></div>`;
+      <ol class="daylist">${days}</ol></section></div>`;
 }
 
 /* ===== Itinerary ===== */
@@ -864,7 +943,7 @@ function mapAside(){
   let popup = '';
   if(S.mapPopup){ const f = findPlace(S.mapPopup); if(f){ const p = f.p; popup = `<div class="popup"><div class="top"><b>${esc(p.name)}</b><button type="button" class="iconbtn" data-act="closepop" aria-label="Close details">${I('x','sm')}</button></div><span class="sub">${p.type === 'hotel' ? 'Hotel, ' + dayList(hotelDays(p.name)) : 'Day ' + (TRIP.days.indexOf(f.d) + 1) + ', stop ' + nums[p.id]}</span>${p.addr ? `<span class="sub">${esc(p.addr)}</span>` : ''}${p.note ? `<p>${esc(p.note)}</p>` : ''}</div>`; } }
   const picking = S.picking ? findPlace(S.picking) : null;
-  return `<aside class="mapcol" aria-label="Map">
+  return `<aside class="mapcol box" aria-label="Map">
     <div class="seg" role="group" aria-label="Map shows"><button type="button" data-act="mapm" data-m="day" aria-pressed="${S.mapMode === 'day'}">This day</button><button type="button" data-act="mapm" data-m="trip" aria-pressed="${S.mapMode === 'trip'}">Whole trip</button></div>
     <div>${picking ? `<div class="pickbar"><span>Tap the map where ${esc(picking.p.name)} is.</span><button type="button" class="btn" data-act="pickcancel">Cancel</button></div>` : ''}${tripMap({ filter, focus:S.mapFocus, picking:!!picking, curDay:i })}</div>
     <div class="field"><label for="findp">Find a place on the map</label><select id="findp" class="input" data-in="findplace"><option value="">Choose a place</option>${groups}</select></div>
@@ -893,14 +972,14 @@ function scrItinerary(){
         <div class="dayhead"><div><h2 style="font-size:var(--text-display)">${esc(d.city) || 'Where to?'}</h2><p>Day ${i + 1}, ${dLong(d.date)}</p></div><button type="button" class="btn btn--primary" data-act="dialog" data-d="add">${I('plus','sm')}Add to this day</button></div>
         ${i === ti ? nextUp(i) : ''}
         ${d.notes ? `<p class="daynote">${esc(d.notes)}</p>` : ''}
-        <section aria-labelledby="h-tt"><div class="sechead"><h3 id="h-tt">Timetable</h3><button type="button" class="link" data-act="addtime">${I('plus','sm')}Add a time</button></div>
+        <section class="box" aria-labelledby="h-tt"><div class="sechead"><h3 id="h-tt">${I('clock')}Timetable</h3><button type="button" class="link" data-act="addtime">${I('plus','sm')}Add a time</button></div>
           ${d.times.length ? `<ul class="ruled">${d.times.map((t, k) => S.editTime === k
             ? `<li class="tt editing"><label class="visually-hidden" for="tt${k}">Time</label><input id="tt${k}" type="time" class="line" data-in="ttime" data-k="${k}" value="${t.t}"><label class="visually-hidden" for="td${k}">What happens</label><textarea id="td${k}" class="line" rows="${Math.max(1, Math.ceil(t.d.length / 40))}" data-in="tdesc" data-k="${k}" placeholder="Grab to the airport, meet the driver in the lobby">${esc(t.d)}</textarea><span class="tt-acts"><button type="button" class="btn" data-act="donetime">Done</button></span></li>`
             : `<li class="tt"><span class="tt-t">${t.t || 'Time'}</span><span class="tt-d">${esc(t.d) || '<span class="sub">No description</span>'}</span><span class="tt-acts"><button type="button" class="iconbtn" data-act="edittime" data-k="${k}" aria-label="Edit ${t.t || 'this time'}">${I('pen')}</button><button type="button" class="iconbtn" data-act="deltime" data-k="${k}" aria-label="Remove ${t.t || 'this time'}">${I('x')}</button></span></li>`).join('')}</ul>` : `<p class="empty">No times yet. Add one for trains, check-ins and bookings.</p>`}</section>
-        <section aria-labelledby="h-fl"><div class="sechead"><h3 id="h-fl">Flights</h3></div>${list(withIdx.filter(x => x.p.type === 'flight'), 'No flights on this day.')}</section>
-        <section aria-labelledby="h-st"><div class="sechead"><h3 id="h-st">Where you stay</h3></div>${list(withIdx.filter(x => x.p.type === 'hotel'), 'No hotel yet. Add one with the button above.')}</section>
-        <section aria-labelledby="h-pl"><div class="sechead"><h3 id="h-pl">Places to visit</h3><span class="sub">Drag the handle to reorder</span></div>${list(withIdx.filter(x => x.p.type === 'activity'), 'No places yet. Add one, or drag one here from another day in Overview.')}</section>
-        <details class="disclose" ${S.openDetails ? 'open' : ''} data-tg="details"><summary>${I('down','sm')}Change the date, town or day notes</summary><div class="body">
+        <section class="box" aria-labelledby="h-fl"><div class="sechead"><h3 id="h-fl">${I('plane')}Flights</h3></div>${list(withIdx.filter(x => x.p.type === 'flight'), 'No flights on this day.')}</section>
+        <section class="box" aria-labelledby="h-st"><div class="sechead"><h3 id="h-st">${I('bed')}Where you stay</h3></div>${list(withIdx.filter(x => x.p.type === 'hotel'), 'No hotel yet. Add one with the button above.')}</section>
+        <section class="box" aria-labelledby="h-pl"><div class="sechead"><h3 id="h-pl">${I('pin')}Places to visit</h3><span class="sub">Drag the handle to reorder</span></div>${list(withIdx.filter(x => x.p.type === 'activity'), 'No places yet. Add one, or drag one here from another day in Overview.')}</section>
+        <details class="disclose box" ${S.openDetails ? 'open' : ''} data-tg="details"><summary>${I('down','sm')}Change the date, town or day notes</summary><div class="body">
           <div class="details"><div class="field"><label for="ddate">Date</label><input id="ddate" type="date" class="input" data-in="ddate" value="${d.date}"></div>
           <div class="field"><label for="dcity">Town for today</label><input id="dcity" class="input" data-in="dcity" value="${esc(d.city)}" placeholder="For example, Shantou" aria-describedby="dcity-help"><span class="help" id="dcity-help">Used to search for places nearby</span></div></div>
           <div class="field"><label for="dnotes">Day notes</label><textarea id="dnotes" class="input" rows="2" data-in="dnotes" placeholder="Anything else to remember">${esc(d.notes)}</textarea></div></div></details>
@@ -965,7 +1044,7 @@ function scrBudget(){
     <td><span class="acts"><button type="button" class="btn btn--quiet" data-act="editexp" data-id="${e.id}">Edit</button><button type="button" class="iconbtn" data-act="delexp" data-id="${e.id}" aria-label="Delete ${esc(e.desc)}">${I('x')}</button></span></td></tr>`).join('');
   return `<div class="screen">${syncBanner()}${pageHead()}
     <div class="bud-top">
-      <section aria-labelledby="h-tot" style="display:flex;flex-direction:column;gap:var(--space-lg)"><div><h2 id="h-tot" class="visually-hidden">Total</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">Example rate: S$1 = ¥115. The real app uses live rates.</p></div>
+      <section class="box" aria-labelledby="h-tot" style="display:flex;flex-direction:column;gap:var(--space-lg)"><div><h2 id="h-tot" class="visually-hidden">Total</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">Example rate: S$1 = ¥115. The real app uses live rates.</p></div>
         <dl class="bars">${CATS.filter(c => t.by[c.k]).map(c => `<dt><span class="cat-ic c-${CATKEY[c.k]}">${I(c.ic,'sm')}</span>${c.k}</dt><dd><span class="track"><span class="fill c-${CATKEY[c.k]}" style="width:${(t.by[c.k] / t.all * 100).toFixed(1)}%"></span></span></dd><dd class="v">${fmt(TRIP.base, t.by[c.k])}</dd>`).join('')}</dl>
         <div class="grid2"><div class="field"><label for="lcur">Local currency</label>${curSel('lcur', TRIP.localCur, 'data-in="lcur" aria-describedby="lcur-help"')}<span class="help" id="lcur-help">New expenses start in it</span></div><div class="field"><label for="bcur">Show totals in</label>${curSel('bcur', TRIP.base, 'data-in="bcur"')}</div></div></section>
       <section class="panel" aria-labelledby="h-add"><div class="dialog-h"><h2 id="h-add">${editing ? 'Edit the expense' : 'Add an expense'}</h2>${editing ? '<button type="button" class="link" data-act="canceledit">Cancel</button>' : ''}</div>
@@ -975,7 +1054,7 @@ function scrBudget(){
           ${amount}${calcHTML()}${S.expErr ? `<p class="formerr" id="experr" role="alert">${I('alert','sm')}${esc(S.expErr.msg)}</p>` : ''}
           <div class="chips"><button type="button" class="btn btn--primary" data-act="saveexp">${editing ? 'Save the changes' : 'Add the expense'}</button>${editing ? `<button type="button" class="btn btn--danger" data-act="delexp" data-id="${editing.id}">Delete it</button>` : ''}</div></form></section>
     </div>
-    <section aria-labelledby="h-led"><div class="sechead"><h2 id="h-led">All expenses</h2><span class="sub">Oldest first</span></div>
+    <section class="box" aria-labelledby="h-led"><div class="sechead"><h2 id="h-led">${I('receipt')}All expenses</h2><span class="sub">Oldest first</span></div>
       ${EXPENSES.length ? `<div class="tablewrap"><table class="ledger"><thead><tr><th scope="col">Date</th><th scope="col">Item</th><th scope="col">Breakdown</th><th scope="col" class="r">Amount</th><th scope="col" class="r">In ${TRIP.base}</th><th scope="col"><span class="visually-hidden">Actions</span></th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="empty">No expenses yet. Add the flights first, they are usually the biggest cost.</p>`}</section></div>`;
 }
 
@@ -985,22 +1064,24 @@ function scrSettings(){
   const tok = S.sync === 'stopped' ? '<span class="state bad">Expired on 2 November 2026</span>' : S.sync === 'expiring' ? '<span class="state warn">Expires on 18 November 2026</span>' : '<span class="state ok">Working until 28 October 2027</span>';
   return `<div class="screen">${syncBanner()}<header class="pagehead"><h1>Settings</h1><button type="button" class="btn" data-act="nav" data-to="home">Close settings</button></header>
   <div class="set-grid">
-    <section class="set" aria-labelledby="h-sync"><h2 id="h-sync">Sync</h2><p>Your trips are saved in your own private GitHub repo, so the iPad and the computer see the same plans, and every save is kept as a version.</p>
+    <section class="set box" aria-labelledby="h-sync"><h2 id="h-sync">Sync</h2><p>Your trips are saved in your own private GitHub repo, so the iPad and the computer see the same plans, and every save is kept as a version.</p>
       <dl class="kv"><dt>Now</dt><dd>${esc(SYNC[S.sync].long)}</dd><dt>Saved in</dt><dd>Vibe-coder-Milo/Trip-Tracker-data, a private GitHub repo</dd><dt>Access token</dt><dd>${tok}<br><span class="sub">Kept on this device only. It opens the data repo and nothing else.</span></dd></dl>
       <div class="chips"><button type="button" class="btn btn--primary" data-act="syncnow">Sync now</button><button type="button" class="btn" data-act="dialog" data-d="token">${S.sync === 'stopped' || S.sync === 'expiring' ? 'Paste a new token' : 'Change the token'}</button><button type="button" class="btn btn--quiet" data-act="toast" data-m="Opens the data repo's history on GitHub in the real app.">See saved versions</button></div>
       <p class="sub">If a trip changed on two devices before syncing, the newer one wins and the older one is kept as a copy in your trips.</p></section>
-    <section class="set" aria-labelledby="h-key"><h2 id="h-key">Google Maps key</h2><p>Used for the map and place search. It is stored in your private data repo, so you enter it once for every device, and it never goes into the public app code.</p>
+    <section class="set box" aria-labelledby="h-key"><h2 id="h-key">Google Maps key</h2><p>Used for the map and place search. It is stored in your private data repo, so you enter it once for every device, and it never goes into the public app code.</p>
       <dl class="kv"><dt>Key</dt><dd class="num">${S.showKey ? 'AIzaSyD, ending Qx4' : 'Hidden, ending Qx4'} <button type="button" class="link" data-act="showkey">${S.showKey ? 'Hide' : 'Show the start'}</button></dd></dl>
       <div class="chips"><button type="button" class="btn" data-act="dialog" data-d="key">Change the key</button></div>
       <p class="sub">Any map key is visible to the browser when the map loads, so restrict it in Google Cloud to vibe-coder-milo.github.io. That restriction is what stops other sites using it.</p>
       <h3>Use this month, all your devices</h3>
       <dl class="usage">${usage.map(([l, v, c]) => `<dt>${l}</dt><dd><span class="track"><span class="fill" style="width:${(v / c * 100).toFixed(1)}%"></span></span></dd><dd class="num">${v.toLocaleString()} of ${c.toLocaleString()}</dd>`).join('')}</dl></section>
-    <section class="set" aria-labelledby="h-help"><h2 id="h-help">Short-link reader</h2><p>Google Maps on the iPad shares short links that hide the location. This small script in your Google account opens them so the app can place the pin.</p>
+    <section class="set box" aria-labelledby="h-help"><h2 id="h-help">Short-link reader</h2><p>Google Maps on the iPad shares short links that hide the location. This small script in your Google account opens them so the app can place the pin.</p>
       <p class="state ${S.helperSet ? 'ok' : 'warn'}">${I(S.helperSet ? 'check' : 'alert','sm')}${S.helperSet ? 'Connected' : 'Not set up'}</p>
       <div class="chips"><button type="button" class="btn" data-act="helper">${S.helperSet ? 'Disconnect (mockup)' : 'Connect (mockup)'}</button><button type="button" class="btn btn--quiet" data-act="toast" data-m="Shows the setup steps in the real app.">Setup steps</button></div></section>
-    <section class="set" aria-labelledby="h-size"><h2 id="h-size">Text size on this device</h2><p>The iPad and the computer each keep their own size.</p>
+    <section class="set box" aria-labelledby="h-look"><h2 id="h-look">Appearance</h2><p>Match the iPad follows its Light and Dark setting, so the app turns dark in the evening by itself.</p>
+      <div class="seg" role="group" aria-label="Appearance"><button type="button" data-act="theme" data-v="auto" aria-pressed="${S.theme === 'auto'}">Match the iPad</button><button type="button" data-act="theme" data-v="light" aria-pressed="${S.theme === 'light'}">Light</button><button type="button" data-act="theme" data-v="dark" aria-pressed="${S.theme === 'dark'}">Dark</button></div></section>
+    <section class="set box" aria-labelledby="h-size"><h2 id="h-size">Text size on this device</h2><p>The iPad and the computer each keep their own size.</p>
       <div class="chips" style="align-items:center"><button type="button" class="btn" data-act="sz" data-d="-1" aria-label="Smaller text">Smaller</button><span class="num" style="min-width:4rem;text-align:center">${Math.round(S.scale * 100)}%</span><button type="button" class="btn" data-act="sz" data-d="1" aria-label="Larger text">Larger</button></div></section>
-    <section class="set" aria-labelledby="h-bk"><h2 id="h-bk">Backups</h2><p>Sync keeps every version, and a file in Google Drive is a second copy you control.</p>
+    <section class="set box" aria-labelledby="h-bk"><h2 id="h-bk">Backups</h2><p>Sync keeps every version, and a file in Google Drive is a second copy you control.</p>
       <div class="chips"><button type="button" class="btn" data-act="toast" data-m="Downloads this trip as a backup file in the real app.">Download this trip</button><button type="button" class="btn" data-act="toast" data-m="Downloads every trip in one file in the real app.">Download all trips</button><button type="button" class="btn" data-act="toast" data-m="Opens a backup file and adds it as a new trip in the real app. Old backups still load.">Load a backup</button></div>
       <div><button type="button" class="btn btn--danger" data-act="askclear">Clear this trip</button></div></section>
   </div></div>`;
@@ -1040,6 +1121,9 @@ function render(){
   app.innerHTML = `${bar()}<main class="wrap">${scr}</main>${footer()}${dialogHTML()}`;
   document.getElementById('pbBefore').setAttribute('aria-pressed', S.pretend === 'before');
   document.getElementById('pbDuring').setAttribute('aria-pressed', S.pretend === 'during');
+  if(S.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', S.theme);
+  const dark = S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+  document.getElementById('pbLight').setAttribute('aria-pressed', !dark); document.getElementById('pbDark').setAttribute('aria-pressed', dark);
   if(S.dialog){ const f = document.querySelector('.dialog input, .dialog select, .dialog textarea, .dialog button:not([data-act="close"])'); if(f && !document.querySelector('.dialog').contains(document.activeElement)) f.focus({ preventScroll:true }); }
 }
 
@@ -1089,6 +1173,7 @@ document.addEventListener('click', e => {
     case 'syncnow': S.sync = 'synced'; announce('Synced with GitHub'); break;
     case 'savetoken': S.sync = 'synced'; S.dialog = null; announce('Token saved on this device, sync running'); break;
     case 'helper': S.helperSet = !S.helperSet; break;
+    case 'theme': S.theme = el.dataset.v; break;
     case 'showkey': S.showKey = !S.showKey; break;
     case 'sz': S.scale = Math.max(.8, Math.min(1.5, +(S.scale + .1 * el.dataset.d).toFixed(1))); break;
     case 'toast': toast(el.dataset.m); return;
