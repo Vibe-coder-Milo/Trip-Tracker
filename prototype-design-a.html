@@ -258,8 +258,8 @@ textarea.inp{ min-height:52px; resize:vertical; line-height:1.45; }
 .item textarea{ grid-column:3 / -1; }
 .trow{ display:grid; grid-template-columns:140px minmax(0,1fr) 40px; gap:10px; align-items:center; margin-bottom:8px; }
 @media (max-width:480px){ .trow{ grid-template-columns:120px minmax(0,1fr) 40px; } }
-.addpanel{ position:sticky; top:16px; }
-@media (max-width:980px){ .addpanel{ position:static; } }
+.mapcol{ position:sticky; top:16px; }
+@media (max-width:980px){ .mapcol{ position:static; order:-1; } }
 .linkres{ display:flex; flex-direction:column; gap:8px; padding:14px 16px; border-radius:12px; border:1.5px solid var(--line); background:#fff; }
 .linkres.ok{ border-color:var(--teal); }
 .linkres.warn{ border-color:var(--warn); background:#fff7ec; }
@@ -430,9 +430,9 @@ const WIKI = {
 
 /* ================= state (memory only) ================= */
 const S = {
-  pretend:'before', screen:'home', day:1, toast:null, dialog:null,
+  pretend:'before', screen:'home', day:0, mapMode:'day', toast:null, dialog:null,
   sync:'synced', scale:1,
-  mapFilter:'all', mapFocus:null, mapPopup:null, picking:null,
+  mapFocus:null, mapPopup:null, picking:null,
   addType:'activity', addCat:'attraction', addMode:'search', q:'', picked:null, link:'', addDay:null, hFrom:null, hTo:null, fName:'', fDep:'', fArr:'', addNote:'', wiki:null,
   draft:{ cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'2' }, editing:null,
   pastForm:{ name:'', from:'', to:'', cities:'' }, hlCity:null, confirm:null,
@@ -621,7 +621,7 @@ function header(){
         <button type="button" class="iconbtn" data-act="nav" data-to="settings" aria-label="Settings">⚙︎ Settings</button></div>
     </div>
     <nav class="tabs" aria-label="Sections"><div class="tabs-in">
-      ${tab('home','🌏','Home')}${during ? tab('today','☀️','Today') : ''}${tab('overview','🧭','Overview')}${tab('map','🗺️','Map')}${tab('itinerary','📋','Itinerary')}${tab('budget','💰','Budget')}${tab('trips','🧳','Trips')}
+      ${tab('home','🌏','Home')}${tab('overview','🧭','Overview')}${tab('itinerary','📋','Itinerary', during ? ' <span class="new">today</span>' : '')}${tab('budget','💰','Budget')}
     </div></nav></header>`;
 }
 function footer(){
@@ -642,7 +642,8 @@ function scrHome(){
   const during = tripDayIndex() > -1;
   const banner = S.sync === 'expiring' ? `<div class="banner"><span><b>Your GitHub token expires in 12 days.</b> Make a new one so sync keeps working.</span><button type="button" class="btn small" data-act="nav" data-to="settings">Renew in Settings</button></div>`
     : S.sync === 'stopped' ? `<div class="banner" style="background:#fdeae4;border-color:#e08a6e"><span><b>Sync stopped: your GitHub token expired.</b> Changes are still saved on this iPad.</span><button type="button" class="btn small" data-act="nav" data-to="settings">Fix in Settings</button></div>` : '';
-  return `${banner}<section class="hero">
+  const todayCard = during ? `<button type="button" class="nextup" style="border:0;text-align:left" data-act="gotoday"><span class="eyebrow">You're travelling · Day ${tripDayIndex() + 1}</span><p>${esc(TRIP.days[tripDayIndex()].city)} · open today's plan →</p></button>` : '';
+  return `${banner}${todayCard}<section class="hero">
       <div class="spread"><div><p class="eyebrow">Your travel map</p><h1>${countries.size} countries, ${cities.size} cities so far</h1></div>
       <div class="legend"><span><i style="background:#c99a3d"></i>Been there</span><span><i style="border:2px solid #f1e9d4"></i>Coming up</span><span><i style="background:#5fb3a6;border-radius:2px;transform:rotate(45deg)"></i>Home</span></div></div>
       ${worldMap()}
@@ -652,7 +653,8 @@ function scrHome(){
     <section class="stack"><div class="spread"><h2 style="font-size:1.5rem">Trips</h2><div class="row">
         <button type="button" class="btn small ghost" data-act="dialog" data-d="past">+ Add a past trip <span class="new">new</span></button>
         <button type="button" class="btn small" data-act="dialog" data-d="newtrip">+ Start a new trip</button></div></div>
-      <div class="passes">${TRIPS.map(passHTML).join('')}</div></section>`;
+      <div class="passes">${TRIPS.map(t => `<div class="row" style="flex-wrap:nowrap;align-items:stretch;gap:8px">${passHTML(t).replace('class="pass', 'style="flex:1;min-width:0" class="pass')}<button type="button" class="x" style="align-self:center" data-act="askdeltrip" data-id="${t.id}" aria-label="Delete ${esc(t.name)}">✕</button></div>`).join('')}</div>
+      <p class="small muted">Tap a trip to open its overview. "Map only" trips just put cities on your map; open one to plan it in full.</p></section>`;
 }
 function passHTML(t){
   const up = new Date(t.start) > today(); const cur = t.id === 'jp';
@@ -662,70 +664,53 @@ function passHTML(t){
     <div class="pm">${tag}<b>${esc(t.name)}</b><span class="cities">${t.cities.map(esc).join(' · ')}</span></div>
     <div class="stub"><span class="route">${esc(t.route || 'SIN')}</span><small>${dShort(t.start)} – ${dShort(t.end)} ${t.end.slice(0, 4)}</small><small>${nd} days</small></div></button>`;
 }
-function scrToday(){
-  const i = tripDayIndex(); if(i < 0) return scrHome();
+function nextUpHTML(i){
   const d = TRIP.days[i]; const now = today().toTimeString().slice(0, 5);
   const timed = d.times.map(t => ({ t:t.t, txt:t.d }));
-  d.places.filter(p => p.type === 'flight').forEach(p => timed.push({ t:p.dep, txt:`✈️ ${p.name} (lands ${p.arr})` }));
+  d.places.filter(p => p.type === 'flight').forEach(p => timed.push({ t:p.dep, txt:`✈️ ${p.name}` }));
   timed.sort((a, b) => a.t.localeCompare(b.t));
   const next = timed.find(x => x.t >= now);
-  const h = d.places.find(p => p.type === 'hotel'); const nums = numbering();
-  const acts = d.places.filter(p => p.type === 'activity');
-  return `<div class="spread"><div><p class="eyebrow">Today · Day ${i + 1} of ${TRIP.days.length} · ${dLong(d.date)}</p><h1 style="font-size:2.25rem">${esc(d.city)}</h1></div>
-      <span class="status"><i></i>Works without signal</span></div>
-    <div class="today-grid"><div class="stack">
-      ${next ? `<section class="nextup"><p class="eyebrow">Next up · it's ${now} now</p><span class="t">${next.t}</span><p>${esc(next.txt)}</p></section>` : `<section class="nextup"><p class="eyebrow">Nothing else timed today</p><p>Enjoy the evening.</p></section>`}
-      ${d.notes ? `<div class="desc" style="font-size:1.0625rem">${esc(d.notes)}</div>` : ''}
-      <section class="card"><h2 style="margin-bottom:8px">Today's timings</h2><ul class="tl">${timed.map(x => `<li class="${x.t < now ? 'past' : x === next ? 'now' : ''}"><span class="t">${x.t}</span><span>${esc(x.txt)}</span></li>`).join('')}</ul></section>
-      ${h ? `<section class="stay"><span class="eyebrow">Tonight</span><b>🏨 ${esc(h.name)}</b><span class="addr">${esc(h.addr)}</span>
-        <div class="row" style="margin-top:6px"><button type="button" class="btn small" data-act="dialog" data-d="taxi">Show address to driver</button><button type="button" class="btn small ghost" data-act="toast" data-m="Opens Google Maps directions to the hotel">Directions</button></div></section>` : ''}
-    </div><div class="stack">
-      ${tripMap({ aspect:4/3.2, filter:i })}
-      <section class="card"><h2 style="margin-bottom:8px">Places today</h2><div class="items">${acts.map(p => `<div class="item" style="grid-template-columns:36px minmax(0,1fr)"><span class="n" style="background:${DAY_COLORS[i % 8]}">${nums[p.id]}</span><div><div class="name">${icon(p)} ${esc(p.name)}</div>${p.addr ? `<div class="addr">${esc(p.addr)}</div>` : ''}${p.note ? `<div style="margin-top:4px">${esc(p.note)}</div>` : ''}</div></div>`).join('')}</div></section>
-    </div></div>`;
+  const h = d.places.find(p => p.type === 'hotel');
+  return `<section class="nextup"><div class="spread"><span class="eyebrow">Today · it's ${now} · works without signal</span>${h ? `<button type="button" class="btn small brass" data-act="dialog" data-d="taxi">Show hotel address to driver</button>` : ''}</div>
+    ${next ? `<div class="row" style="gap:16px;flex-wrap:nowrap;align-items:baseline"><span class="t">${next.t}</span><p>${esc(next.txt)}</p></div>` : '<p>Nothing else timed today.</p>'}</section>`;
 }
-function scrOverview(){
-  const t = totals(); const nums = numbering();
-  const cards = TRIP.days.map((d, i) => {
+function overviewCards(){
+  const nums = numbering();
+  return TRIP.days.map((d, i) => {
     const hotels = [...new Set(d.places.filter(p => p.type === 'hotel').map(p => p.name))];
     const flights = d.places.filter(p => p.type === 'flight');
     const acts = d.places.map((p, pi) => ({ p, pi })).filter(x => x.p.type === 'activity');
     const noted = d.places.filter(p => p.note && p.type !== 'flight');
+    const isToday = i === tripDayIndex();
     return `<article class="ov-card" data-day="${i}">
-      <div class="ov-stub"><small>DAY</small><b>${String(i + 1).padStart(2, '0')}</b></div>
+      <div class="ov-stub"><small>${isToday ? 'TODAY' : 'DAY'}</small><b>${String(i + 1).padStart(2, '0')}</b></div>
       <div class="ov-body">
-        <div class="ov-head"><h3>${esc(d.city) || 'Where to?'}</h3><span class="d">${dLong(d.date)}</span></div>
+        <div class="ov-head"><h3><button type="button" class="linkbtn" style="font:inherit;color:inherit;text-decoration:none;padding:0" data-act="day" data-i="${i}">${esc(d.city) || 'Where to?'} ›</button></h3><span class="d">${dLong(d.date)}</span></div>
         ${(hotels.length || flights.length) ? `<div class="ov-meta">${hotels.map(h => `<span>🏨 ${esc(h)}</span>`).join('')}${flights.map(f => `<span>✈️ ${esc(f.name)} · ${f.dep} → ${f.arr}</span>`).join('')}</div>` : ''}
-        <div class="ov-chips" data-drop="${i}">${acts.length ? acts.map(({ p, pi }) => `<span class="pchip" data-drag="ov" data-day="${i}" data-idx="${pi}"><span class="num" style="background:${DAY_COLORS[i % 8]}">${nums[p.id]}</span>${icon(p)} ${esc(p.name)}</span>`).join('') : '<span class="ov-empty">No places yet · drop one here</span>'}</div>
+        <div class="ov-chips">${acts.length ? acts.map(({ p, pi }) => `<span class="pchip" data-drag="ov" data-day="${i}" data-idx="${pi}"><span class="num" style="background:${DAY_COLORS[i % 8]}">${nums[p.id]}</span>${icon(p)} ${esc(p.name)}</span>`).join('') : '<span class="ov-empty">No places yet · drop one here</span>'}</div>
         ${d.times.length ? `<div class="ov-times">${d.times.map(x => `<div><span class="t">${x.t}</span>${esc(x.d)}</div>`).join('')}</div>` : ''}
         ${noted.map(p => { const long = p.note.length > 90; const open = S.openNotes?.has(p.id); return `<div class="ov-note"><b>${esc(p.name)}:</b> ${esc(long && !open ? p.note.slice(0, 90).replace(/\s+\S*$/, '') + '…' : p.note)} ${long ? `<button type="button" class="linkbtn" data-act="note" data-id="${p.id}">${open ? 'less' : 'more'}</button>` : ''}</div>`; }).join('')}
       </div></article>`;
   }).join('');
-  return `<section class="card"><div class="spread" style="margin-bottom:16px"><h2>Trip summary</h2><button type="button" class="btn small ghost" data-act="toast" data-m="Opens the print dialog so you can save the overview as a PDF (works in the real app)">🖨️ Save as PDF</button></div>
-      <div class="ov-sum"><div><p class="muted small">Total spent (in ${TRIP.base})</p><div class="total">${fmt(TRIP.base, t.all)}</div><p class="small muted">Example rates · S$1 = ¥115</p></div>
-      <div class="bars">${CATS.filter(c => t.by[c.k]).map(c => `<div class="bar"><span>${c.ic} ${c.k}</span><span class="track"><span class="fill" style="width:${(t.by[c.k] / t.all * 100).toFixed(1)}%;background:${c.color}"></span></span><span class="v">${fmt(TRIP.base, t.by[c.k])}</span></div>`).join('')}</div></div></section>
-    <p class="tip">Press and drag a place to reorder it, or drop it on another day to move it there. Numbers match the map pins.</p>
-    <div class="ov-list">${cards}</div>`;
 }
-function scrMap(){
+function mapAside(all){
   const nums = numbering();
-  const filter = S.mapFilter;
-  const chips = `<button type="button" class="chip" data-act="mapf" data-f="all" aria-pressed="${filter === 'all'}">All days</button>` + TRIP.days.map((d, i) => d.places.some(p => p.type !== 'flight') ? `<button type="button" class="chip" data-act="mapf" data-f="${i}" aria-pressed="${filter === i}"><span class="ldot" style="background:${DAY_COLORS[i % 8]}"></span>Day ${i + 1}</button>` : '').join('');
+  const focusPl = S.mapFocus ? findPlace(S.mapFocus) : null;
+  const filter = focusPl ? TRIP.days.indexOf(focusPl.d) : (all || S.mapMode === 'trip') ? 'all' : S.day;
   const groups = TRIP.days.map((d, i) => { const o = d.places.filter(p => p.type !== 'flight' && p.lat != null); return o.length ? `<optgroup label="Day ${i + 1} · ${esc(d.city)}">${o.map(p => `<option value="${p.id}" ${S.mapFocus === p.id ? 'selected' : ''}>${p.type === 'hotel' ? '🏨' : nums[p.id] + '.'} ${esc(p.name)}</option>`).join('')}</optgroup>` : ''; }).join('');
-  const unplaced = TRIP.days.flatMap((d, i) => d.places.filter(p => p.lat == null && p.type !== 'flight').map(p => ({ p, i })));
+  const unplaced = TRIP.days.flatMap((d, i) => d.places.filter(p => p.lat == null && p.type !== 'flight').map(p => ({ p, i }))).filter(x => all || x.i === S.day);
   let popup = '';
-  if(S.mapPopup){ const f = findPlace(S.mapPopup); if(f){ const p = f.p; popup = `<div class="popup"><span class="eyebrow">${p.type === 'hotel' ? 'Hotel · Days ' + hotelDays(p.name).join(', ') : 'Day ' + (TRIP.days.indexOf(f.d) + 1) + ' · stop ' + nums[p.id]}</span><b>${icon(p)} ${esc(p.name)}</b>${p.addr ? `<span class="small muted">${esc(p.addr)}</span>` : ''}${p.note ? `<span class="small">${esc(p.note)}</span>` : ''}</div>`; } }
+  if(S.mapPopup){ const f = findPlace(S.mapPopup); if(f){ const p = f.p; popup = `<div class="popup"><div class="spread"><span class="eyebrow">${p.type === 'hotel' ? 'Hotel · Days ' + hotelDays(p.name).join(', ') : 'Day ' + (TRIP.days.indexOf(f.d) + 1) + ' · stop ' + nums[p.id]}</span><button type="button" class="x" data-act="closepop" aria-label="Close details">✕</button></div><b>${icon(p)} ${esc(p.name)}</b>${p.addr ? `<span class="small muted">${esc(p.addr)}</span>` : ''}${p.note ? `<span class="small">${esc(p.note)}</span>` : ''}</div>`; } }
   const picking = S.picking ? findPlace(S.picking) : null;
-  return `<div class="map-grid"><div class="stack">
-      <div class="chips">${chips}</div>
-      <div style="position:relative">${tripMap({ aspect:16/10.5, filter: S.mapFocus ? (findPlace(S.mapFocus) ? TRIP.days.indexOf(findPlace(S.mapFocus).d) : 'all') : filter, focus:S.mapFocus, picking:!!picking })}
+  return `<aside class="mapcol stack">
+      ${all ? `<p class="eyebrow">Map · whole trip</p>` : `<div class="seg" role="group" aria-label="Map shows"><button type="button" data-act="mapm" data-m="day" aria-pressed="${S.mapMode === 'day'}">This day</button><button type="button" data-act="mapm" data-m="trip" aria-pressed="${S.mapMode === 'trip'}">Whole trip</button></div>`}
+      <div style="position:relative">${tripMap({ aspect:4/3.3, filter, focus:S.mapFocus, picking:!!picking })}
         ${picking ? `<div class="pickbar"><span>Tap the map where <b>${esc(picking.p.name)}</b> is.</span><button type="button" class="btn small brass" data-act="pickcancel">Cancel</button></div>` : ''}</div>
-    </div><aside class="stack">
       <div class="field"><label for="findp">Find a place</label><select id="findp" class="inp" data-in="findplace"><option value="">Choose a place to show on the map…</option>${groups}</select></div>
-      ${S.mapFocus ? `<button type="button" class="btn small ghost" data-act="unfocus">Show whole ${filter === 'all' ? 'trip' : 'day'} again</button>` : ''}
-      ${popup || `<p class="small muted">Tap a pin to see its details. Hotels list every day they cover. Zoomed out, pins group by city: tap one to open that day.</p>`}
+      ${S.mapFocus ? `<button type="button" class="btn small ghost" data-act="unfocus">Show the whole ${all || S.mapMode === 'trip' ? 'trip' : 'day'} again</button>` : ''}
+      ${popup || `<p class="small muted">Tap a pin for details. Hotels list every day they cover.${all ? ' Zoomed out, pins group by city: tap one to open that day.' : ''}</p>`}
       ${unplaced.length ? `<div class="unplaced"><b>${unplaced.length} place${unplaced.length > 1 ? 's' : ''} not on the map yet</b>${unplaced.map(({ p, i }) => `<div class="spread"><span class="small">Day ${i + 1} · ${esc(p.name)}</span><button type="button" class="btn small" data-act="pick" data-id="${p.id}">Drop a pin</button></div>`).join('')}</div>` : ''}
-    </aside></div>`;
+    </aside>`;
 }
 function itemHTML(p, i, pi, nums){
   const color = DAY_COLORS[i % 8];
@@ -740,15 +725,28 @@ function itemHTML(p, i, pi, nums){
     ${move || p.lat == null && p.type !== 'flight' ? `<div class="tools">${move}${p.lat == null && p.type !== 'flight' ? `<button type="button" class="btn small ghost" data-act="pick" data-id="${p.id}">Drop a pin on the map</button>` : ''}</div>` : ''}
   </div>`;
 }
-function scrItinerary(){
-  const i = Math.min(S.day, TRIP.days.length - 1); const d = TRIP.days[i]; const nums = numbering();
-  const tabs = TRIP.days.map((dd, j) => `<button type="button" class="daytab" data-act="day" data-i="${j}" aria-current="${j === i}"><small>Day ${j + 1} · ${dShort(dd.date)}</small><b>${esc(dd.city) || 'Where to?'}</b></button>`).join('') + `<button type="button" class="daytab add" data-act="addday">+ Day</button>`;
-  const sec = (title, list) => `<div class="sec"><h3>${title}</h3>${list.length ? `<div class="items" data-drop-it="${i}">${list.map(({ p, pi }) => itemHTML(p, i, pi, nums)).join('')}</div>` : `<p class="ov-empty">None yet</p>`}</div>`;
-  const withIdx = d.places.map((p, pi) => ({ p, pi }));
-  return `<div class="daytabs">${tabs}</div>
-    <div class="it-grid">
-      <article class="daycard"><div class="stubv"><small>DAY</small><b>${String(i + 1).padStart(2, '0')}</b></div>
+function scrOverview(){ return tripLayout(true); }
+function scrItinerary(){ return tripLayout(false); }
+function tripLayout(all){
+  const ti = tripDayIndex();
+  const tabs = TRIP.days.map((dd, j) => `<button type="button" class="daytab" data-act="day" data-i="${j}" aria-current="${j === S.day}"><small>${j === ti ? 'Today · ' : 'Day ' + (j + 1) + ' · '}${dShort(dd.date)}</small><b>${esc(dd.city) || 'Where to?'}</b></button>`).join('')
+    + `<button type="button" class="daytab add" data-act="addday">+ Day</button>`;
+  let left;
+  if(all){
+    const tt = totals();
+    left = `<div class="stack"><section class="card"><div class="ov-sum" style="grid-template-columns:1fr;gap:18px"><div><p class="muted small">Total spent (in ${TRIP.base})</p><div class="total">${fmt(TRIP.base, tt.all)}</div><p class="small muted">Example rates · S$1 = ¥115</p></div>
+        <div class="bars">${CATS.filter(c => tt.by[c.k]).map(c => `<div class="bar"><span>${c.ic} ${c.k}</span><span class="track"><span class="fill" style="width:${(tt.by[c.k] / tt.all * 100).toFixed(1)}%;background:${c.color}"></span></span><span class="v">${fmt(TRIP.base, tt.by[c.k])}</span></div>`).join('')}</div></div></section>
+      <div class="spread"><h1 style="font-size:1.75rem">Day by day</h1><div class="row"><button type="button" class="btn small ghost" data-act="toast" data-m="Opens the print dialog so you can save the itinerary as a PDF (works in the real app)">🖨️ Save as PDF</button><button type="button" class="btn small" data-act="dialog" data-d="add">+ Add</button></div></div>
+      <p class="tip">Press and drag a place to reorder it, or drop it on another day to move it there. Tap a day's name to edit it in Itinerary. Numbers match the map pins.</p>
+      <div class="ov-list">${overviewCards()}</div></div>`;
+  } else {
+    const i = S.day; const d = TRIP.days[i]; const nums = numbering();
+    const sec = (title, list) => `<div class="sec"><h3>${title}</h3>${list.length ? `<div class="items">${list.map(({ p, pi }) => itemHTML(p, i, pi, nums)).join('')}</div>` : `<p class="ov-empty">None yet</p>`}</div>`;
+    const withIdx = d.places.map((p, pi) => ({ p, pi }));
+    left = `<div class="stack">${i === ti ? nextUpHTML(i) : ''}
+      <article class="daycard"><div class="stubv"><small>${i === ti ? 'TODAY' : 'DAY'}</small><b>${String(i + 1).padStart(2, '0')}</b></div>
         <div class="body">
+          <div class="spread"><div><p class="eyebrow">Day ${i + 1} · ${dLong(d.date)}</p><h1 style="font-size:2rem">${esc(d.city) || 'Where to?'}</h1></div><button type="button" class="btn" data-act="dialog" data-d="add">+ Add</button></div>
           <div class="grid2"><div class="field"><label for="ddate">Date</label><input id="ddate" type="date" class="inp" data-in="ddate" value="${d.date}"></div>
             <div class="field"><label for="dcity">Town for today</label><input id="dcity" class="inp" data-in="dcity" value="${esc(d.city)}" placeholder="e.g. Shantou"><span class="hint">Used to find hotels, flights and places nearby</span></div></div>
           ${sec('✈️ Flights', withIdx.filter(x => x.p.type === 'flight'))}
@@ -758,9 +756,9 @@ function scrItinerary(){
             <button type="button" class="linkbtn" data-act="addtime">+ Add a timing</button></div>
           <div class="field"><label for="dnotes">Notes</label><textarea id="dnotes" class="inp" rows="2" data-in="dnotes" placeholder="Anything else to remember">${esc(d.notes)}</textarea></div>
           <div><button type="button" class="btn small danger" data-act="askdelday">Delete Day ${i + 1}</button></div>
-        </div></article>
-      <aside class="addpanel"><section class="card stack">${addPanelHTML(i)}</section></aside>
-    </div>`;
+        </div></article></div>`;
+  }
+  return `${all ? '' : `<div class="daytabs">${tabs}</div>`}<div class="it-grid">${left}${mapAside(all)}</div>`;
 }
 function addPanelHTML(i){
   const t = S.addType; const di = S.addDay != null ? S.addDay : i;
@@ -782,8 +780,7 @@ function addPanelHTML(i){
       : `<div class="field"><label for="aday">Day</label><select id="aday" class="inp" data-in="aday">${dayOpts(di)}</select></div>`;
     main = `${cat}${how}${finder}${days}`;
   }
-  return `<h2>Add to the trip</h2>
-    <div class="seg" role="group" aria-label="What to add"><button type="button" data-act="atype" data-t="activity" aria-pressed="${t === 'activity'}">Place to visit</button><button type="button" data-act="atype" data-t="hotel" aria-pressed="${t === 'hotel'}">🏨 Hotel</button><button type="button" data-act="atype" data-t="flight" aria-pressed="${t === 'flight'}">✈️ Flight</button></div>
+  return `<div class="seg" role="group" aria-label="What to add"><button type="button" data-act="atype" data-t="activity" aria-pressed="${t === 'activity'}">Place to visit</button><button type="button" data-act="atype" data-t="hotel" aria-pressed="${t === 'hotel'}">🏨 Hotel</button><button type="button" data-act="atype" data-t="flight" aria-pressed="${t === 'flight'}">✈️ Flight</button></div>
     ${main}
     <div class="field"><label for="anote">Note (optional)</label><textarea id="anote" class="inp" rows="2" data-in="anote" placeholder="${t === 'flight' ? 'Booking reference, seat number, terminal, baggage…' : 'Why you picked it, what to order, reminders…'}">${esc(S.addNote)}</textarea>
       ${t !== 'flight' ? `<div><button type="button" class="linkbtn" data-act="wiki">Try to find a description</button></div>` : ''}<div id="wikires">${S.wiki ? `<div class="desc">${esc(S.wiki)}</div>` : ''}</div></div>
@@ -826,11 +823,6 @@ function draftPreview(){
   const tot = parseFloat(d.total); if(!(tot > 0)) return { empty:true, big:'Enter the amount' }; return { big:fmt(d.cur, tot), sub:d.cur !== tb ? `≈ ${fmt(tb, conv(d.cur, tb, tot))}` : '' };
 }
 function calcHTML(){ const p = draftPreview(); return `<div class="calc ${p.empty ? 'empty' : ''}" id="calc" aria-live="polite"><span class="big">${esc(p.big)}</span>${p.sub ? `<span class="sub">${esc(p.sub)}</span>` : ''}</div>`; }
-function scrTrips(){
-  return `<div class="spread"><h1 style="font-size:1.75rem">Trips</h1><div class="row"><button type="button" class="btn small ghost" data-act="dialog" data-d="past">+ Add a past trip <span class="new">new</span></button><button type="button" class="btn small" data-act="dialog" data-d="newtrip">+ Start a new trip</button></div></div>
-    <p class="muted">Tap a trip to open it. Past trips are kept for reference. "Map only" trips just put cities on your world map; open one to plan it in full.</p>
-    <div class="stack">${TRIPS.map(t => `<div class="row" style="flex-wrap:nowrap;align-items:stretch">${passHTML(t).replace('class="pass', 'style="flex:1;min-width:0" class="pass')}<button type="button" class="x" style="align-self:center" data-act="askdeltrip" data-id="${t.id}" aria-label="Delete ${esc(t.name)}">✕</button></div>`).join('')}</div>`;
-}
 function scrSettings(){
   const usage = [['Map loads', 214, 10000], ['Autocomplete', 1380, 10000], ['Text search', 42, 5000], ['Place details', 310, 10000], ['Geocoding', 96, 10000]];
   const tokStatus = S.sync === 'stopped' ? '<span class="status bad"><i></i>Expired on 2 Nov 2026</span>' : S.sync === 'expiring' ? '<span class="status warn"><i></i>Expires 18 Nov 2026 (in 12 days)</span>' : '<span class="status"><i></i>Working · expires 28 Oct 2027</span>';
@@ -870,6 +862,7 @@ function dialogHTML(){
       <div id="pcheck">${pastCheckHTML(cs)}</div>
       <button type="button" class="btn brass" data-act="savepast">Add to my map</button>`);
   }
+  if(k === 'add') return box('Add to the trip', addPanelHTML(S.screen === 'overview' ? 0 : S.day));
   if(k === 'newtrip') return box('Start a new trip', `<div class="field"><label for="ntname">Trip name</label><input id="ntname" class="inp" placeholder="e.g. Hokkaido in Winter"></div><div class="field"><label for="ntdate">First day</label><input id="ntdate" type="date" class="inp"></div><button type="button" class="btn brass" data-act="close">Create trip</button><p class="small muted">Mockup: this only closes the box.</p>`);
   if(k === 'taxi'){ const h = TRIP.days[tripDayIndex()].places.find(p => p.type === 'hotel'); return box('Show to the driver', `<p class="bigtext">${esc(h.name)}</p><p class="bigtext" style="font-size:clamp(1.25rem,4.5vw,2rem);font-weight:600">${esc(h.addr)}</p><p class="small muted">Big text so you can hold the screen up to a taxi driver.</p>`); }
   if(k === 'token') return box('GitHub access token', `<p class="muted">Paste a fine-grained token that can only read and write <span class="mono">Trip-Tracker-data</span>. It's stored on this device only.</p><div class="field"><label for="tok">Token</label><input id="tok" class="inp mono" placeholder="github_pat_…" autocomplete="off"></div><button type="button" class="btn brass" data-act="savetoken">Save and sync</button>`);
@@ -887,8 +880,7 @@ const app = document.getElementById('app');
 function render(){
   document.documentElement.style.setProperty('--scale', S.scale);
   const during = tripDayIndex() > -1;
-  if(S.screen === 'today' && !during) S.screen = 'home';
-  const scr = { home:scrHome, today:scrToday, overview:scrOverview, map:scrMap, itinerary:scrItinerary, budget:scrBudget, trips:scrTrips, settings:scrSettings }[S.screen]();
+  const scr = { home:scrHome, overview:scrOverview, itinerary:scrItinerary, budget:scrBudget, settings:scrSettings }[S.screen]();
   app.innerHTML = `${header()}<main class="main">${scr}</main>${footer()}${dialogHTML()}`;
   document.getElementById('pbBefore').setAttribute('aria-pressed', S.pretend === 'before');
   document.getElementById('pbDuring').setAttribute('aria-pressed', S.pretend === 'during');
@@ -896,7 +888,7 @@ function render(){
 
 /* ================= actions ================= */
 function addPlace(){
-  const t = S.addType; const di = S.addDay != null ? S.addDay : S.day;
+  const t = S.addType; const di = S.addDay != null ? S.addDay : (S.screen === 'overview' ? 0 : S.day);
   if(t === 'flight'){
     if(!S.fName.trim()){ toast('Enter the flight name or number.'); return; }
     TRIP.days[di].places.unshift(P({ type:'flight', name:S.fName.trim(), dep:S.fDep || '--:--', arr:S.fArr || '--:--', note:S.addNote }));
@@ -915,7 +907,7 @@ function addPlace(){
     }
     S.q = ''; S.picked = null; S.link = '';
   }
-  S.addNote = ''; S.wiki = null; S.day = di; render();
+  S.addNote = ''; S.wiki = null; S.dialog = null; if(S.screen === 'itinerary') S.day = di; render();
 }
 function saveExpense(){
   const d = S.draft; const m = catOf(d.cat).mode;
@@ -933,7 +925,10 @@ document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if(!el || el.dataset.act === '') return;
   const a = el.dataset.act; if(a === 'closebg' && e.target !== el) return;
   switch(a){
-    case 'pretend': S.pretend = el.dataset.v; S.screen = S.pretend === 'during' ? 'today' : 'home'; window.scrollTo(0, 0); toast(S.pretend === 'during' ? 'During a trip, the app opens on Today' : 'Before a trip, the app opens on your world map'); break;
+    case 'pretend': S.pretend = el.dataset.v; if(S.pretend === 'during'){ S.screen = 'itinerary'; S.day = tripDayIndex(); S.mapMode = 'day'; } else { S.screen = 'home'; S.day = 0; } S.mapFocus = S.mapPopup = null; window.scrollTo(0, 0); toast(S.pretend === 'during' ? 'During a trip, the app opens on today in the Itinerary' : 'Before a trip, the app opens on your world map'); break;
+    case 'gotoday': S.screen = 'itinerary'; S.day = tripDayIndex(); S.mapMode = 'day'; window.scrollTo(0, 0); break;
+    case 'mapm': S.mapMode = el.dataset.m; S.mapFocus = null; S.mapPopup = null; break;
+    case 'closepop': S.mapPopup = null; S.mapFocus = null; break;
     case 'nav': S.screen = el.dataset.to; S.dialog = null; S.picking = null; window.scrollTo(0, 0); break;
     case 'sync': S.sync = { synced:'saving', saving:'offline', offline:'expiring', expiring:'stopped', stopped:'synced' }[S.sync]; break;
     case 'syncnow': S.sync = 'synced'; toast('Synced with GitHub'); break;
@@ -956,18 +951,17 @@ document.addEventListener('click', e => {
     case 'askdeltrip': { if(el.dataset.id === 'jp'){ toast('The mockup keeps the Japan trip so the other screens still work.'); return; } const t = TRIPS.find(x => x.id === el.dataset.id); confirmBox('Delete this trip?', `<b>${esc(t.name)}</b> will be removed from every device. Its older versions stay in your GitHub history.`, 'Delete trip', () => { TRIPS.splice(TRIPS.indexOf(t), 1); toast('Trip deleted'); render(); }); } return;
     case 'askclear': confirmBox('Clear this trip?', 'All days, places and expenses in Japan in Autumn will be removed.', 'Clear trip', () => toast('Mockup: nothing was cleared')); return;
     case 'note': S.openNotes = S.openNotes || new Set(); S.openNotes.has(el.dataset.id) ? S.openNotes.delete(el.dataset.id) : S.openNotes.add(el.dataset.id); break;
-    case 'mapf': S.mapFilter = el.dataset.f === 'all' ? 'all' : +el.dataset.f; S.mapFocus = null; S.mapPopup = null; break;
-    case 'mapday': S.mapFilter = +el.dataset.i; S.mapFocus = null; break;
+    case 'mapday': S.screen = 'itinerary'; window.scrollTo(0, 0); S.day = +el.dataset.i; S.mapMode = 'day'; S.mapFocus = null; S.mapPopup = null; break;
     case 'pin': S.mapPopup = el.dataset.id; break;
     case 'unfocus': S.mapFocus = null; break;
-    case 'pick': S.picking = el.dataset.id; S.screen = 'map'; const f = findPlace(el.dataset.id); S.mapFilter = TRIP.days.indexOf(f.d); S.mapFocus = null; window.scrollTo(0, 0); break;
+    case 'pick': { S.picking = el.dataset.id; const f = findPlace(el.dataset.id); S.screen = 'itinerary'; S.day = TRIP.days.indexOf(f.d); S.mapMode = 'day'; S.mapFocus = null; S.mapPopup = null; window.scrollTo(0, 0); } break;
     case 'pickcancel': S.picking = null; break;
     case 'mapclick': {
       if(!S.picking) return; const svg = el.closest('svg'); const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
       const loc = pt.matrixTransform(svg.getScreenCTM().inverse()); const ll = unJ(loc.x, loc.y); const f2 = findPlace(S.picking);
       f2.p.lat = +ll.lat.toFixed(5); f2.p.lon = +ll.lon.toFixed(5); S.picking = null; S.mapPopup = f2.p.id; toast(`Pinned ${f2.p.name}`);
     } break;
-    case 'day': S.day = +el.dataset.i; S.addDay = null; S.hFrom = S.hTo = null; break;
+    case 'day': if(S.screen !== 'itinerary'){ S.screen = 'itinerary'; window.scrollTo(0, 0); } S.day = +el.dataset.i; S.addDay = null; S.hFrom = S.hTo = null; S.mapFocus = null; S.mapPopup = null; S.picking = null; break;
     case 'addday': { const last = TRIP.days[TRIP.days.length - 1]; TRIP.days.push(D(addDaysISO(last.date, 1), '', '', [], [])); S.day = TRIP.days.length - 1; toast(`Added Day ${TRIP.days.length} · ${dLong(TRIP.days[S.day].date)} (the day after the last one)`); } break;
     case 'askdelday': { const i = S.day; confirmBox(`Delete Day ${i + 1}?`, `Its places, hotel, flights, timings and notes will be removed.`, 'Delete day', () => { TRIP.days.splice(i, 1); S.day = Math.max(0, i - 1); toast(`Deleted Day ${i + 1}`); render(); }); } return;
     case 'delplace': { const f = findPlace(el.dataset.id); f.d.places.splice(f.i, 1); toast(`Removed ${f.p.name}`); } break;
