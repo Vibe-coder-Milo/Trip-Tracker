@@ -1,0 +1,1087 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+<title>Trip Tracker Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+  PROTOTYPE — throwaway. Not the real app; nothing here saves anywhere.
+  Question: "What should the redesigned Trip Tracker look like?"
+  Three structurally different layouts of the same app, switchable from the floating bar
+  (or the ← / → keys, or #variant-a / #variant-b / #variant-c in the address).
+  Every layout carries the same new ideas: world-map home page, bigger and calmer type,
+  hotel nights + per-night price, price-per-person × people, add a place from a Google Maps
+  link, and a sync status. The data is sample data for a made-up trip.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&family=Atkinson+Hyperlegible:wght@400;700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout concept: one app, three shells — A keeps today's top-tabs layout but larger,
+   B is a map-first iPad layout with a sidebar, C is a one-column journal with a bottom tab bar.
+   Palette stays the user's "Boarding Pass" theme; contrast on secondary text is raised. */
+:root{
+  color-scheme: light;
+  --navy:#101b2d; --navy-2:#1a2a42; --navy-3:#24385a;
+  --paper:#f5eedd; --paper-2:#ebe1c9; --card:#fffaf0;
+  --brass:#c99a3d; --brass-ink:#8a6420; --teal:#2f6e66; --brick:#a34a2f;
+  --ink:#1b2029; --muted:#4f4a3d; --faint:#7b745f;
+  --line:rgba(16,27,45,.16); --line-strong:rgba(16,27,45,.3);
+  --on-navy:#f1e9d4; --on-navy-muted:#b3bdcd;
+  --good:#2f6e66; --warn:#a8641c;
+  --display:'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --body:'Inter', system-ui, sans-serif;
+  --scale:1;
+}
+html{ font-size:calc(100% * var(--scale)); }
+*{ box-sizing:border-box; }
+body{ margin:0; background:var(--paper); color:var(--ink); font-family:var(--body); font-size:1.0625rem; line-height:1.55; -webkit-text-size-adjust:100%; }
+button,input,select,textarea{ font:inherit; color:inherit; }
+button{ cursor:pointer; }
+:focus-visible{ outline:3px solid var(--brass); outline-offset:2px; }
+h1,h2,h3{ font-family:var(--display); text-wrap:balance; margin:0; line-height:1.2; }
+p{ margin:0; }
+.mono{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.eyebrow{ font-family:var(--mono); font-size:.8125rem; letter-spacing:.08em; text-transform:uppercase; color:var(--brass-ink); }
+.sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+/* ---------- shared controls ---------- */
+.field{ display:flex; flex-direction:column; gap:6px; min-width:0; }
+.field label, .field .lbl{ font-size:.9375rem; font-weight:600; color:var(--muted); }
+.inp{ width:100%; min-height:48px; padding:10px 14px; border:1.5px solid var(--line-strong); border-radius:10px; background:#fff; font-size:1.0625rem; }
+.inp:focus{ border-color:var(--teal); outline:none; box-shadow:0 0 0 3px rgba(47,110,102,.18); }
+textarea.inp{ min-height:96px; resize:vertical; line-height:1.45; }
+.inp.num{ font-family:var(--mono); font-variant-numeric:tabular-nums; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:48px; padding:10px 20px; border-radius:999px; border:1.5px solid var(--navy); background:var(--navy); color:var(--on-navy); font-weight:600; font-size:1rem; }
+.btn.ghost{ background:transparent; color:var(--navy); }
+.btn.brass{ background:var(--brass); border-color:var(--brass); color:var(--navy); }
+.btn.small{ min-height:40px; padding:6px 14px; font-size:.9375rem; }
+.chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.chip{ min-height:44px; padding:8px 16px; border-radius:999px; border:1.5px solid var(--line-strong); background:#fff; font-size:.9688rem; font-weight:500; }
+.chip[aria-pressed="true"]{ background:var(--navy); border-color:var(--navy); color:var(--on-navy); }
+.seg{ display:inline-flex; padding:4px; border-radius:999px; background:var(--paper-2); gap:4px; }
+.seg button{ min-height:40px; padding:6px 16px; border-radius:999px; border:0; background:transparent; font-weight:600; font-size:.9375rem; color:var(--muted); }
+.seg button[aria-pressed="true"]{ background:var(--card); color:var(--ink); box-shadow:0 1px 3px rgba(16,27,45,.15); }
+.grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.grid3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+@media (max-width:560px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+/* calculation result line — the "show me per night / per person" idea */
+.calc{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; padding:14px 16px; border-radius:12px; background:var(--paper-2); border:1.5px dashed var(--line-strong); }
+.calc .big{ font-family:var(--mono); font-size:1.375rem; font-weight:600; color:var(--navy); }
+.calc .sub{ font-size:.9688rem; color:var(--muted); }
+.calc.empty .big{ color:var(--faint); font-weight:500; font-size:1.0625rem; font-family:var(--body); }
+
+/* sync chip */
+.sync{ display:inline-flex; align-items:center; gap:10px; min-height:44px; padding:6px 14px 6px 12px; border-radius:999px; border:1.5px solid currentColor; background:transparent; font-size:.9375rem; font-weight:500; text-align:left; }
+.sync .dot{ width:10px; height:10px; border-radius:50%; background:var(--good); flex:0 0 auto; }
+.sync[data-s="syncing"] .dot{ background:var(--brass); animation:pulse 1s infinite; }
+.sync[data-s="offline"] .dot{ background:var(--warn); }
+@keyframes pulse{ 50%{ opacity:.3; } }
+
+/* world map */
+.world{ position:relative; width:100%; }
+.world svg{ display:block; width:100%; height:auto; }
+.world .lab{ position:absolute; transform:translate(8px,-50%); white-space:nowrap; font-size:.8125rem; font-weight:600; pointer-events:none; line-height:1.1; }
+.world .lab.l{ transform:translate(calc(-100% - 8px),-50%); }
+.world .lab.b{ transform:translate(-50%, 9px); }
+.world .lab.t{ transform:translate(-50%, calc(-100% - 9px)); }
+.world .lab.hl{ font-size:.9375rem; }
+@media (max-width:700px){ .world .lab:not(.hl){ display:none; } }
+.citydot{ cursor:pointer; }
+
+/* trip map */
+.tripmap{ position:relative; width:100%; overflow:hidden; border-radius:14px; }
+.tripmap svg{ display:block; width:100%; height:100%; }
+.mapnote{ position:absolute; left:10px; bottom:10px; font-size:.8125rem; color:var(--muted); background:rgba(255,250,240,.88); padding:4px 10px; border-radius:8px; pointer-events:none; }
+.newpin{ animation:ring 1.4s ease-out infinite; transform-box:fill-box; transform-origin:center; }
+@keyframes ring{ 0%{ opacity:.9; transform:scale(.6);} 100%{ opacity:0; transform:scale(2.2);} }
+@media (prefers-reduced-motion:reduce){ .newpin, .sync .dot{ animation:none !important; } }
+
+/* add-place form */
+.linkres{ display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:12px; border:1.5px solid var(--line); background:#fff; }
+.linkres.ok{ border-color:var(--teal); }
+.linkres.warn{ border-color:var(--warn); background:#fff7ec; }
+.linkres h4{ margin:0; font-family:var(--display); font-size:1.125rem; }
+.linkres .meta{ color:var(--muted); font-size:.9688rem; }
+.examples{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.examples span{ font-size:.9375rem; color:var(--muted); }
+.results{ display:flex; flex-direction:column; border:1.5px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; }
+.results button{ text-align:left; padding:12px 16px; border:0; border-bottom:1px solid var(--line); background:#fff; display:flex; flex-direction:column; gap:2px; min-height:56px; }
+.results button:last-child{ border-bottom:0; }
+.results b{ font-weight:600; }
+.results small{ color:var(--muted); font-size:.9375rem; }
+
+.toast{ position:fixed; left:50%; top:calc(16px + env(safe-area-inset-top,0px)); transform:translateX(-50%); z-index:60; background:var(--navy); color:var(--on-navy); padding:12px 20px; border-radius:12px; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.25); max-width:calc(100% - 32px); }
+
+/* ---------- prototype switcher (not part of the design) ---------- */
+.proto-bar{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(16px + env(safe-area-inset-bottom,0px)); z-index:80; display:flex; align-items:center; gap:4px; padding:6px; border-radius:999px; background:#0b0b0d; color:#fff; box-shadow:0 10px 30px rgba(0,0,0,.35); font-family:var(--mono); font-size:13px; max-width:calc(100% - 24px); }
+.proto-bar button{ min-width:40px; min-height:40px; border-radius:999px; border:0; background:#26262b; color:#fff; font-size:16px; }
+.proto-bar .lbl{ padding:0 10px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.proto-bar .sep{ width:1px; height:24px; background:#3a3a40; margin:0 4px; }
+.proto-bar .sz{ font-size:12px; color:#bbb; min-width:40px; text-align:center; }
+body.c-active .proto-bar{ bottom:calc(92px + env(safe-area-inset-bottom,0px)); }
+@media (max-width:520px){ .proto-bar .lbl small{ display:none; } }
+
+/* =========================================================
+   VARIANT A — "Boarding pass, larger": today's layout, top tabs
+   ========================================================= */
+.vA{ --body:'Inter', system-ui, sans-serif; font-family:var(--body); background:var(--paper); min-height:100vh; padding-bottom:110px; }
+.a-top{ background:var(--navy); color:var(--on-navy); }
+.a-top-in, .a-tabs-in, .a-main{ max-width:1400px; margin:0 auto; padding-left:max(24px, env(safe-area-inset-left,0px)); padding-right:max(24px, env(safe-area-inset-right,0px)); }
+.a-top-in{ display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding-block:18px 14px; }
+.a-brand{ display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:700; font-size:1.25rem; }
+.a-brand svg{ width:30px; height:30px; color:var(--brass); }
+.a-trip{ flex:1 1 260px; min-width:0; text-align:left; background:var(--navy-2); border:1px solid var(--navy-3); color:var(--on-navy); border-radius:12px; padding:10px 16px; display:flex; flex-direction:column; }
+.a-trip b{ font-family:var(--display); font-size:1.125rem; }
+.a-trip small{ color:var(--on-navy-muted); font-size:.9375rem; }
+.a-top .sync{ color:var(--on-navy); border-color:var(--navy-3); }
+.a-tabs-in{ display:flex; gap:6px; overflow-x:auto; }
+.a-tab{ min-height:52px; padding:10px 20px; border:0; background:transparent; color:var(--on-navy-muted); font-weight:600; font-size:1.0625rem; border-bottom:3px solid transparent; white-space:nowrap; }
+.a-tab[aria-current="page"]{ color:var(--on-navy); border-bottom-color:var(--brass); }
+.a-main{ padding-block:28px; display:flex; flex-direction:column; gap:28px; }
+.a-card{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:24px; }
+@media (max-width:600px){ .a-card{ padding:18px; border-radius:14px; } .a-top-in,.a-tabs-in,.a-main{ padding-left:max(16px, env(safe-area-inset-left,0px)); padding-right:max(16px, env(safe-area-inset-right,0px)); } }
+
+.a-hero{ background:var(--navy); color:var(--on-navy); border-radius:22px; padding:28px; display:flex; flex-direction:column; gap:20px; }
+.a-hero h1{ font-size:clamp(1.75rem, 3.4vw, 2.5rem); font-weight:700; }
+.a-hero .eyebrow{ color:var(--brass); }
+.a-hero-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }
+.legend{ display:flex; gap:18px; flex-wrap:wrap; font-size:.9375rem; }
+.legend span{ display:inline-flex; align-items:center; gap:8px; }
+.legend i{ width:12px; height:12px; border-radius:50%; display:inline-block; }
+.a-hero .world .lab{ color:var(--on-navy); text-shadow:0 1px 2px var(--navy), 0 0 6px var(--navy); }
+.a-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:0; margin:0; border-top:1px solid var(--navy-3); padding-top:18px; }
+.a-stats div{ padding:0 18px; border-left:1px solid var(--navy-3); }
+.a-stats div:first-child{ border-left:0; padding-left:0; }
+.a-stats dt{ font-size:.875rem; color:var(--on-navy-muted); }
+.a-stats dd{ margin:2px 0 0; font-family:var(--mono); font-size:1.625rem; font-weight:600; color:var(--on-navy); }
+@media (max-width:640px){ .a-stats{ grid-template-columns:1fr 1fr; row-gap:14px; } .a-stats div:nth-child(3){ border-left:0; padding-left:0; } .a-hero{ padding:20px; } }
+
+.a-sec-h{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.a-sec-h h2{ font-size:1.5rem; }
+.a-passes{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 420px), 1fr)); gap:18px; margin-top:16px; }
+.pass{ display:grid; grid-template-columns:1fr auto; text-align:left; border:1px solid var(--line); background:var(--card); border-radius:16px; padding:0; overflow:hidden; color:var(--ink); }
+.pass .main{ padding:18px 20px; display:flex; flex-direction:column; gap:6px; min-width:0; }
+.pass .main b{ font-family:var(--display); font-size:1.1875rem; }
+.pass .main .cities{ color:var(--muted); font-size:.9688rem; }
+.pass .stub{ padding:18px 20px; border-left:2px dashed var(--line-strong); display:flex; flex-direction:column; justify-content:space-between; gap:6px; background:var(--paper); min-width:150px; }
+.pass .stub .route{ font-family:var(--mono); font-weight:600; font-size:1rem; }
+.pass .stub small{ font-family:var(--mono); color:var(--muted); font-size:.875rem; }
+.pass.up{ border-color:var(--brass); box-shadow:0 0 0 2px rgba(201,154,61,.3); }
+.pass.up .stub{ background:var(--navy); color:var(--on-navy); border-left-color:var(--brass); }
+.pass.up .stub small{ color:var(--on-navy-muted); }
+.tag{ display:inline-flex; align-self:flex-start; padding:3px 10px; border-radius:999px; font-family:var(--mono); font-size:.8125rem; letter-spacing:.05em; text-transform:uppercase; background:var(--paper-2); color:var(--muted); }
+.tag.up{ background:var(--brass); color:var(--navy); }
+
+.a-daystrip{ display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.a-day{ flex:0 0 auto; min-width:128px; text-align:left; padding:10px 14px; border-radius:12px; border:1.5px solid var(--line); background:var(--card); display:flex; flex-direction:column; gap:2px; }
+.a-day small{ font-family:var(--mono); font-size:.8125rem; color:var(--muted); }
+.a-day b{ font-size:1rem; }
+.a-day[aria-current="true"]{ border-color:var(--navy); background:var(--navy); color:var(--on-navy); }
+.a-day[aria-current="true"] small{ color:var(--brass); }
+.a-daygrid{ display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.a-mapcol{ position:sticky; top:16px; display:flex; flex-direction:column; gap:12px; }
+.a-mapcol .tripmap{ aspect-ratio:4/3.4; border:1px solid var(--line); }
+@media (max-width:900px){ .a-daygrid{ grid-template-columns:1fr; } .a-mapcol{ position:static; order:-1; } .a-mapcol .tripmap{ aspect-ratio:16/10; } }
+.a-plan{ display:flex; flex-direction:column; gap:22px; }
+.a-plan-h{ display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+.a-plan-h h1{ font-size:2rem; }
+.notes{ padding:14px 16px; border-left:4px solid var(--brass); background:var(--paper); border-radius:0 10px 10px 0; font-size:1.0625rem; }
+.a-plan h3{ font-size:.875rem; font-family:var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; font-weight:500; }
+.times{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.times li{ display:grid; grid-template-columns:70px 1fr; gap:14px; padding:10px 0; border-bottom:1px solid var(--line); }
+.times li:last-child{ border-bottom:0; }
+.times .t{ font-family:var(--mono); font-weight:600; color:var(--teal); }
+.stops{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.stop{ display:grid; grid-template-columns:40px 1fr; gap:14px; padding:14px; border:1px solid var(--line); border-radius:14px; background:var(--card); }
+.stop .n{ width:36px; height:36px; border-radius:50%; display:grid; place-items:center; color:#fff; font-family:var(--mono); font-weight:600; font-size:.9375rem; }
+.stop .n.sq{ border-radius:9px; }
+.stop b{ font-size:1.0625rem; font-weight:600; }
+.stop .addr{ color:var(--muted); font-size:.9375rem; }
+.stop .note{ margin-top:6px; font-size:.9688rem; }
+.stop .kind{ font-size:.875rem; color:var(--muted); margin-left:6px; font-weight:500; }
+
+.a-budget{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start; }
+.a-budget .span2{ grid-column:1 / -1; }
+@media (max-width:900px){ .a-budget{ grid-template-columns:1fr; } }
+.total{ font-family:var(--mono); font-size:clamp(2rem,4vw,2.75rem); font-weight:600; color:var(--navy); line-height:1.1; }
+.bars{ display:flex; flex-direction:column; gap:12px; margin-top:18px; }
+.bar{ display:grid; grid-template-columns:130px 1fr auto; gap:12px; align-items:center; font-size:.9688rem; }
+.bar .track{ height:12px; background:var(--paper-2); border-radius:6px; overflow:hidden; }
+.bar .fill{ height:100%; border-radius:6px; }
+.bar .v{ font-family:var(--mono); font-variant-numeric:tabular-nums; min-width:90px; text-align:right; }
+@media (max-width:480px){ .bar{ grid-template-columns:96px 1fr; } .bar .v{ grid-column:2; text-align:left; } }
+.form{ display:flex; flex-direction:column; gap:16px; }
+.tablewrap{ overflow-x:auto; }
+table.ledger{ width:100%; border-collapse:collapse; font-size:1rem; min-width:640px; }
+.ledger th{ text-align:left; font-family:var(--mono); font-size:.8125rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:500; padding:10px 12px; border-bottom:2px solid var(--line-strong); }
+.ledger td{ padding:14px 12px; border-bottom:1px solid var(--line); vertical-align:top; }
+.ledger td.num, .ledger th.num{ text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
+.ledger .brk{ color:var(--teal); font-family:var(--mono); font-size:.9375rem; white-space:nowrap; }
+.ledger .catdot{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:8px; }
+
+.overlay{ position:fixed; inset:0; z-index:50; background:rgba(16,27,45,.55); display:flex; align-items:center; justify-content:center; padding:24px max(16px, env(safe-area-inset-right,0px)) 24px max(16px, env(safe-area-inset-left,0px)); }
+.dialog{ width:min(680px, 100%); max-height:calc(100vh - 48px); overflow:auto; background:var(--card); border-radius:20px; padding:26px; display:flex; flex-direction:column; gap:18px; }
+.dialog-h{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.dialog-h h2{ font-size:1.5rem; }
+.x{ width:44px; height:44px; border-radius:50%; border:1.5px solid var(--line-strong); background:transparent; font-size:1.25rem; }
+
+/* =========================================================
+   VARIANT B — "Atlas": map-first, sidebar + panel + big map
+   ========================================================= */
+.vB{ --body:'Atkinson Hyperlegible', system-ui, sans-serif; font-family:var(--body); font-size:1.125rem; height:100vh; display:grid; grid-template-columns:260px 420px minmax(0,1fr); background:var(--paper); }
+.b-side{ background:var(--navy); color:var(--on-navy); display:flex; flex-direction:column; gap:18px; padding:22px 14px calc(22px + env(safe-area-inset-bottom,0px)) max(14px, env(safe-area-inset-left,0px)); overflow:auto; }
+.b-brand{ display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:700; font-size:1.1875rem; padding:0 8px; }
+.b-brand svg{ width:28px; height:28px; color:var(--brass); }
+.b-nav{ display:flex; flex-direction:column; gap:2px; }
+.b-nav .h{ font-family:var(--mono); font-size:.8125rem; letter-spacing:.08em; text-transform:uppercase; color:var(--brass); padding:14px 10px 6px; }
+.b-link{ display:flex; align-items:center; gap:12px; min-height:48px; padding:8px 10px; border-radius:10px; border:0; background:transparent; color:var(--on-navy); text-align:left; font-size:1.0625rem; }
+.b-link small{ margin-left:auto; font-family:var(--mono); font-size:.8125rem; color:var(--on-navy-muted); }
+.b-link[aria-current="true"]{ background:var(--navy-3); }
+.b-link .d{ width:12px; height:12px; border-radius:50%; flex:0 0 auto; }
+.b-link .ic{ width:22px; text-align:center; }
+.b-side .sync{ color:var(--on-navy); border-color:var(--navy-3); margin-top:auto; width:100%; }
+.b-panel{ background:var(--card); border-right:1px solid var(--line); overflow:auto; padding:26px 24px 120px; display:flex; flex-direction:column; gap:20px; }
+.b-panel h1{ font-size:1.75rem; }
+.b-main{ position:relative; overflow:auto; min-width:0; }
+.b-main .tripmap{ position:absolute; inset:0; height:100%; border-radius:0; }
+.b-worldwrap{ position:absolute; inset:0; display:flex; align-items:center; background:#dfe7e6; padding:16px; overflow:hidden; }
+.b-main .world .lab{ color:var(--navy); text-shadow:0 0 4px #f8f3e6, 0 0 2px #f8f3e6; }
+.b-mapbar{ position:absolute; top:16px; right:16px; z-index:2; display:flex; gap:8px; }
+.b-mapbar .seg{ background:rgba(255,250,240,.92); box-shadow:0 2px 10px rgba(16,27,45,.15); }
+.b-country{ border-top:1px solid var(--line); padding-top:12px; display:flex; flex-direction:column; gap:8px; }
+.b-country h3{ font-size:1.0625rem; display:flex; justify-content:space-between; }
+.b-country h3 small{ font-family:var(--mono); font-weight:500; color:var(--muted); font-size:.875rem; }
+.b-country .chips .chip{ min-height:40px; padding:6px 14px; }
+.b-upnext{ background:var(--navy); color:var(--on-navy); border-radius:14px; padding:16px 18px; display:flex; flex-direction:column; gap:6px; text-align:left; border:0; }
+.b-upnext small{ color:var(--brass); font-family:var(--mono); font-size:.8125rem; letter-spacing:.06em; text-transform:uppercase; }
+.b-upnext b{ font-family:var(--display); font-size:1.25rem; }
+.b-upnext span{ color:var(--on-navy-muted); font-size:1rem; }
+.b-line{ display:grid; grid-template-columns:64px 1fr; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.b-line .t{ font-family:var(--mono); font-weight:600; color:var(--teal); }
+.b-stop{ display:grid; grid-template-columns:36px 1fr; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); }
+.b-stop .n{ width:32px; height:32px; border-radius:50%; display:grid; place-items:center; color:#fff; font-family:var(--mono); font-weight:600; font-size:.875rem; }
+.b-stop .n.sq{ border-radius:8px; }
+.b-stop .addr{ color:var(--muted); font-size:.9688rem; }
+.b-sub{ font-family:var(--mono); font-size:.8125rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin-top:6px; }
+.b-ledger{ padding:28px 28px 120px; display:flex; flex-direction:column; gap:22px; max-width:900px; }
+.b-group{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; }
+.b-group-h{ display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 18px; background:var(--paper); border-bottom:1px solid var(--line); }
+.b-group-h b{ font-family:var(--display); font-size:1.125rem; display:flex; align-items:center; gap:10px; }
+.b-group-h .mono{ font-weight:600; }
+.b-row{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 16px; padding:14px 18px; border-bottom:1px solid var(--line); }
+.b-row:last-child{ border-bottom:0; }
+.b-row .brk{ color:var(--teal); font-family:var(--mono); font-size:.9375rem; }
+.b-row .r{ text-align:right; font-family:var(--mono); }
+.b-row .r small{ display:block; color:var(--muted); font-size:.875rem; }
+@media (max-width:1240px){ .vB{ grid-template-columns:210px 360px minmax(0,1fr); } }
+@media (max-width:900px){
+  .vB{ display:flex; flex-direction:column; height:auto; min-height:100vh; }
+  .b-side{ flex-direction:row; align-items:center; gap:8px; padding:12px max(16px, env(safe-area-inset-right,0px)) 12px max(16px, env(safe-area-inset-left,0px)); overflow-x:auto; }
+  .b-side .b-nav{ flex-direction:row; }
+  .b-side .b-nav .h, .b-side .b-days{ display:none; }
+  .b-side .sync{ width:auto; margin:0 0 0 auto; flex:0 0 auto; }
+  .b-link{ white-space:nowrap; }
+  .b-main{ order:-1; height:52vh; min-height:300px; flex:0 0 auto; }
+  .vB.scr-budget .b-main{ order:0; height:auto; }
+  .b-panel{ border-right:0; padding:22px max(16px, env(safe-area-inset-right,0px)) 120px max(16px, env(safe-area-inset-left,0px)); }
+  .b-ledger{ padding:22px max(16px, env(safe-area-inset-right,0px)) 120px max(16px, env(safe-area-inset-left,0px)); }
+  .b-daysel{ display:flex !important; }
+  .b-mob{ display:contents; }
+}
+.b-mob{ display:none; }
+.b-daysel{ display:none; gap:8px; overflow-x:auto; }
+
+/* =========================================================
+   VARIANT C — "Journal": one column, biggest type, bottom tabs
+   ========================================================= */
+.vC{ --body:'Source Sans 3', system-ui, sans-serif; font-family:var(--body); font-size:1.1875rem; background:var(--paper); min-height:100vh; padding-bottom:180px; }
+.c-col{ max-width:720px; margin:0 auto; padding-left:max(20px, env(safe-area-inset-left,0px)); padding-right:max(20px, env(safe-area-inset-right,0px)); }
+.c-head{ padding-block:28px 8px; display:flex; flex-direction:column; gap:8px; }
+.c-head h1{ font-size:clamp(2rem, 6vw, 2.625rem); font-weight:800; letter-spacing:-.01em; }
+.c-head .sync{ align-self:flex-start; border:0; padding-left:0; color:var(--muted); min-height:36px; }
+.c-body{ display:flex; flex-direction:column; gap:26px; padding-top:14px; }
+.c-card{ background:var(--card); border-radius:22px; padding:22px; border:1px solid var(--line); }
+.c-next{ background:var(--navy); color:var(--on-navy); border-radius:22px; padding:22px; display:flex; flex-direction:column; gap:10px; }
+.c-next .eyebrow{ color:var(--brass); }
+.c-next h2{ font-size:1.625rem; }
+.c-next p{ color:var(--on-navy-muted); }
+.c-next .btn{ align-self:flex-start; background:var(--brass); border-color:var(--brass); color:var(--navy); }
+.c-h2{ font-size:1.375rem; }
+.c-year{ font-family:var(--mono); font-size:.875rem; letter-spacing:.08em; color:var(--brass-ink); margin:18px 0 4px; }
+.c-city{ display:flex; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); align-items:baseline; }
+.c-city b{ font-size:1.1875rem; font-weight:600; }
+.c-city span{ color:var(--muted); font-size:1rem; text-align:right; }
+.c-dates{ display:flex; gap:10px; overflow-x:auto; padding:4px 2px 8px; }
+.c-date{ flex:0 0 auto; width:68px; padding:10px 0; border-radius:16px; border:1.5px solid var(--line); background:var(--card); display:flex; flex-direction:column; align-items:center; gap:0; }
+.c-date small{ font-family:var(--mono); font-size:.75rem; letter-spacing:.06em; color:var(--muted); }
+.c-date b{ font-family:var(--display); font-size:1.5rem; }
+.c-date[aria-current="true"]{ background:var(--navy); border-color:var(--navy); color:var(--on-navy); }
+.c-date[aria-current="true"] small{ color:var(--brass); }
+.c-dayh h2{ font-size:2rem; font-weight:800; }
+.c-dayh p{ color:var(--muted); }
+.c-maptoggle{ display:flex; justify-content:space-between; align-items:center; width:100%; min-height:56px; padding:12px 18px; border-radius:16px; border:1.5px solid var(--line-strong); background:var(--card); font-weight:600; font-size:1.0625rem; }
+.c-map .tripmap{ aspect-ratio:4/3; margin-top:12px; border:1px solid var(--line); }
+.tl{ list-style:none; margin:0; padding:0; position:relative; }
+.tl::before{ content:""; position:absolute; left:79px; top:10px; bottom:10px; width:2px; background:var(--line-strong); }
+.tl li{ display:grid; grid-template-columns:64px 1fr; gap:30px; padding:12px 0; position:relative; }
+.tl li::after{ content:""; position:absolute; left:74px; top:21px; width:12px; height:12px; border-radius:50%; background:var(--paper); border:2px solid var(--teal); }
+.tl .t{ font-family:var(--mono); font-weight:600; font-size:1.0625rem; color:var(--teal); text-align:right; }
+.tl .flight b{ display:block; }
+.c-stay{ display:flex; gap:14px; align-items:center; padding:16px 18px; border-radius:16px; background:var(--paper-2); }
+.c-stay .ic{ font-size:1.5rem; }
+.c-stay small{ display:block; color:var(--muted); font-size:.9688rem; }
+.c-place{ display:grid; grid-template-columns:44px 1fr; gap:14px; padding:16px 0; border-bottom:1px solid var(--line); }
+.c-place .n{ width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:#fff; font-family:var(--mono); font-weight:600; }
+.c-place b{ font-size:1.1875rem; font-weight:600; }
+.c-place .addr{ color:var(--muted); font-size:1rem; }
+.c-place .note{ margin-top:4px; font-size:1.0625rem; }
+.c-wide{ width:100%; min-height:56px; font-size:1.125rem; }
+.c-total{ font-family:var(--mono); font-size:clamp(2.5rem, 9vw, 3.5rem); font-weight:600; line-height:1; color:var(--navy); }
+.c-cat{ display:grid; grid-template-columns:1fr auto; gap:6px 12px; padding:14px 0; border-bottom:1px solid var(--line); }
+.c-cat .track{ grid-column:1 / -1; height:10px; border-radius:5px; background:var(--paper-2); overflow:hidden; }
+.c-cat .fill{ height:100%; border-radius:5px; }
+.c-exp{ display:grid; grid-template-columns:1fr auto; gap:2px 12px; padding:14px 0; border-bottom:1px solid var(--line); }
+.c-exp .brk{ color:var(--teal); font-family:var(--mono); font-size:.9688rem; }
+.c-exp .r{ font-family:var(--mono); text-align:right; }
+.c-exp .r small{ display:block; color:var(--muted); font-size:.875rem; }
+.c-tabbar{ position:fixed; left:0; right:0; bottom:0; z-index:40; background:var(--card); border-top:1px solid var(--line); display:flex; justify-content:center; padding:8px max(12px, env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px, env(safe-area-inset-left,0px)); }
+.c-tabbar .in{ display:grid; grid-template-columns:repeat(3,1fr); width:min(560px,100%); gap:6px; }
+.c-tab{ display:flex; flex-direction:column; align-items:center; gap:2px; min-height:60px; border:0; background:transparent; border-radius:14px; color:var(--muted); font-weight:600; font-size:.9375rem; }
+.c-tab .ic{ font-size:1.375rem; line-height:1; }
+.c-tab[aria-current="page"]{ color:var(--navy); background:var(--paper-2); }
+.sheet-wrap{ position:fixed; inset:0; z-index:55; background:rgba(16,27,45,.5); display:flex; align-items:flex-end; justify-content:center; }
+.sheet{ width:min(720px, 100%); max-height:92vh; overflow:auto; background:var(--card); border-radius:26px 26px 0 0; padding:12px max(20px, env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(20px, env(safe-area-inset-left,0px)); display:flex; flex-direction:column; gap:18px; }
+.sheet .grab{ width:44px; height:5px; border-radius:3px; background:var(--line-strong); align-self:center; }
+.sheet-h{ display:flex; justify-content:space-between; align-items:center; }
+.sheet-h h2{ font-size:1.5rem; }
+.steps{ font-family:var(--mono); font-size:.875rem; color:var(--muted); }
+.cattiles{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.cattile{ min-height:96px; border-radius:16px; border:1.5px solid var(--line-strong); background:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; font-weight:600; font-size:1.0625rem; }
+.cattile .ic{ font-size:1.75rem; }
+.cattile[aria-pressed="true"]{ border-color:var(--navy); background:var(--navy); color:var(--on-navy); }
+@media (max-width:420px){ .cattiles{ grid-template-columns:repeat(2,1fr); } }
+.vC .inp{ min-height:56px; font-size:1.1875rem; border-radius:14px; }
+.vC .calc .big{ font-size:1.625rem; }
+</style>
+
+<div id="app"></div>
+<div class="proto-bar" role="toolbar" aria-label="Prototype controls">
+  <button type="button" data-act="vprev" aria-label="Previous layout">‹</button>
+  <span class="lbl" id="vlabel">A</span>
+  <button type="button" data-act="vnext" aria-label="Next layout">›</button>
+  <span class="sep"></span>
+  <button type="button" data-act="szdown" aria-label="Smaller text">A−</button>
+  <span class="sz" id="szlabel">100%</span>
+  <button type="button" data-act="szup" aria-label="Larger text">A+</button>
+</div>
+
+<script>
+/* ===== Sample data (made up for the mockup) ===== */
+const LAND = "M120.43,170.04L120.13,170.55L119.84,171L117.75,170.86L115.51,170.92L114.26,170.59L114.26,170.55L113.71,170.26L115.96,170.29L118.12,170.39L118.86,169.98L119.39,169.63ZM20.79,169.5L18.87,169.63L17.56,169.28L16.97,168.93L16.93,168.87L16.29,168.6L16.89,168.22L18.76,168.38L19.75,168.69L20.52,169.05ZM134.85,168.05L136.08,168.48L136.51,169.09L136.63,169.52L136.67,170.03L135.12,170.34L133.49,170.59L131.61,170.83L129.52,171.03L127.15,170.97L125.84,170.63L126.01,170.22L128.15,169.95L129.01,169.61L129.63,169.18L130.09,168.81L130.69,168.46L131.34,168.05L131.85,168.05L133.34,167.83ZM58.79,163.5L60.08,163.66L61.28,163.48L60.71,163.83L59.77,164.09L58.38,164.01L57.38,163.66L57.59,163.32ZM54.44,163.48L55.97,163.87L55.38,163.83L54.09,163.74L52.72,163.46L53.44,163.25ZM81.02,161.93L82.12,162.07L83.21,161.95L83.8,162.52L83.02,162.44L81.8,162.48L80.57,162.44L79.22,162.5L78.2,162.31L77.67,161.89L78.3,161.72L79.57,161.86ZM111.55,160.96L111.67,161.41L111.49,161.8L111.22,162.17L110.04,162.31L108.92,162.5L107.61,162.48L108.1,162.09L106.92,162.23L105.81,162.37L105.05,162.07L104.99,161.66L106.09,161.27L106.77,161.15L107.93,161.19L108.22,160.68L108.28,160.31L108.26,159.51L108.83,159.04L109.75,158.88L110.28,159.25L110.51,159.62L110.94,160.07L111.27,160.5ZM0,174.71L0,174.71L0,174.71L0.06,174.72L0.94,174.14L2.74,174.45L2.86,174.42L3.14,174.33L3.48,174.23L3.77,174.14L3.92,174.1L4.06,174.1L4.17,174.12L5.62,174.53L6.88,174.12L7.11,174.06L10.05,173.88L11,174.12L11.47,174.24L12.98,174.57L15.82,174.83L18.07,175.14L21.93,175.37L24.81,175.1L29.06,175.3L31.47,175.61L34.11,175.31L36.89,175.04L37.11,174.57L33.17,174.53L29.94,174.3L29.1,173.9L26.41,173.69L26.59,173.24L26.96,172.83L27.34,172.45L27.14,172.04L25.47,171.77L24.71,171.41L23.16,171.1L25.59,171.16L27.9,171L29.35,171.34L31.13,171.04L32.78,170.67L33.58,170.34L33.23,169.93L31.94,169.65L30.47,169.36L28.41,169.3L26.61,169.16L24.67,169.06L24.02,168.69L22.73,168.38L21.95,168.03L21.64,166.89L22.13,166.99L23.03,167.3L24.67,167.2L26.26,167.07L27.08,167.5L28.67,167.4L30,167.18L31.25,166.91L32.39,166.58L33.89,166.48L33.85,166.11L33.51,165.73L33.8,165.38L35.09,165.2L35.68,165.54L37.21,165.34L38.36,165.09L39.79,165.07L41.14,164.97L42.49,164.73L43.57,164.52L44.78,164.3L45.57,164.36L46.25,164.44L47.74,164.3L49.08,164.48L50.45,164.46L51.76,164.32L53.11,164.42L54.6,164.52L55.99,164.48L57.44,164.5L58.93,164.52L60.3,164.48L61.32,164.18L62.53,164.03L63.79,164.24L64.98,164.07L66.06,163.72L66.7,164.03L67.05,164.38L67.7,164.71L68.74,164.42L69.93,164.79L71.28,164.91L72.44,165.18L73.85,165.13L75.13,164.95L76.63,164.99L77.98,165.13L79.36,165.3L79.88,164.87L79.24,164.54L78.75,164.18L77.45,164.11L76.89,163.73L76.67,163.36L76.32,162.62L77.08,162.75L78.39,162.81L79.69,162.75L80.86,162.91L81.88,163.21L82.31,163.56L83.66,163.62L84.96,163.48L86.33,163.28L87.56,163.17L88.58,163.4L89.91,163.32L90.77,162.56L91.58,163.01L92.73,163.19L93.99,163.09L94.81,163.48L96.12,163.52L97.33,163.64L98.53,163.85L99.31,163.48L99.7,163.13L100.7,163.52L102.08,163.42L103.09,163.64L103.78,163.97L105.11,163.87L106.15,163.66L107.17,163.4L108.38,163.26L109.79,163.15L111.06,163.01L112.04,162.79L112.63,162.48L112.86,162.05L112.75,161.64L112.44,161.25L112.08,160.85L111.77,160.46L111.51,160.11L111.46,159.72L111.55,159.32L112.02,158.95L112.41,158.54L112.57,158.15L112.38,157.72L112.26,157.33L112.75,156.88L113.3,156.58L113.94,156.21L114.63,155.9L115.43,155.6L115.82,155.17L116.37,154.9L117,154.64L117.96,154.58L118.59,154.27L119.29,154.07L120.11,153.96L120.84,153.7L121.4,153.39L122.19,153.27L122.78,153.53L122.4,153.86L121.39,154.15L120.95,154.37L120.21,154.21L119.39,154.31L118.7,154.55L117.98,154.8L117.49,155.09L117.35,155.48L117.41,155.86L117.88,156.19L117.2,156.43L116.26,156.5L115.71,156.84L115.12,157.15L114.49,157.58L114.33,157.95L114.69,158.37L115.22,158.68L116.04,158.91L116.8,159.23L117.21,159.62L117.43,159.99L117.72,160.38L118.19,160.72L118.49,161.09L118.62,162.01L118.92,162.38L119,162.77L119.31,163.17L119.17,163.7L118.62,164.11L118.04,164.44L116.71,164.58L116.26,164.93L115.65,165.26L114.14,165.63L112.81,165.79L111.55,166.01L110.2,166.22L109.4,166.64L107.79,166.67L106.03,166.64L104.44,166.71L102.76,166.71L103.07,167.11L104.6,167.28L105.72,167.56L106.35,167.91L105.23,168.22L103.5,168.12L102.08,168.38L102.01,168.79L101.97,169.18L103.15,169.51L103.37,169.89L104.64,170.26L106.76,170.42L108.56,170.69L109.99,171L111.81,171.32L114.29,171.47L116.75,171.75L118.45,172.04L120.31,172.38L121.29,172.85L121.78,173.22L122.99,172.87L124.64,172.57L126.38,172.26L128.46,172L130.24,171.73L132.73,171.71L135.17,171.85L137.19,172.08L137.84,171.65L139.23,171.36L141.76,171.34L143.74,171.12L145.61,170.91L147.69,170.77L149.9,170.59L151.45,170.34L150.74,169.98L150.32,169.63L150.32,169.26L148.38,169.3L146.32,169.46L144.36,169.46L144.08,169.08L144.22,168.34L144.67,168.12L146.1,167.89L147.79,167.65L149,167.36L150.22,167.07L151.12,166.67L152.49,166.5L153.84,166.36L154.52,166.28L156.07,166.24L157.54,166.11L158.78,165.91L159.99,165.67L161.09,165.44L162.48,165.13L163.36,164.79L164.3,164.5L164.59,164.11L163.54,163.87L163.89,163.46L164.55,163.15L165.59,162.95L166.69,162.72L167.71,162.4L168.49,162.01L168.98,161.54L169.71,161.26L170.9,161.32L171.39,161.66L172.58,161.7L172.62,161.32L173.13,160.93L174.21,161.03L174.46,161.4L175.66,161.46L176.95,161.28L178.21,161.17L179.34,161.23L179.77,161.64L180.87,161.31L181.89,161.13L183.02,160.99L184.14,160.85L185.16,160.62L186.27,160.46L187.14,160.25L187.74,159.89L188.49,160.15L189.52,160.01L190.25,160.48L190.82,160.83L191.95,160.64L192.4,160.25L193.42,159.97L194.74,160.03L195.13,160.4L195.95,160.03L197.03,159.91L198.2,159.88L199.26,159.89L200.37,160.01L201.45,160.07L201.92,160.4L202.57,160.7L203.66,160.52L204.84,160.48L205.98,160.48L207.09,160.46L208.09,160.33L209.15,160.21L210.03,159.93L210.97,159.76L211.99,159.66L212.75,159.38L213.3,158.84L213.87,158.5L214.91,158.66L215.3,159.01L216.16,159.25L217.2,159.17L217.91,159.52L218.65,159.78L219.67,159.54L220.02,159.11L220.92,158.93L221.96,158.6L222.94,158.46L224.11,158.27L224.9,158.05L225.72,157.82L226.5,157.6L227.44,157.72L228.34,157.37L228.99,157.09L229.93,157.11L230.76,156.88L230.95,156.52L231.79,156.25L232.61,156.05L233.61,155.9L234.54,155.82L235.41,155.88L236.36,155.98L237.16,156.25L237.26,156.68L238.14,157.01L238.74,157.29L239.94,157.41L240.6,157.68L241.43,157.95L242.39,158.01L243.19,157.82L244.05,157.41L244.99,157.62L245.97,157.74L246.91,157.86L247.89,157.93L248.89,157.93L249.71,158.97L249.67,159.23L249.55,159.68L248.6,159.93L247.81,160.3L247.95,160.7L249.06,160.68L248.93,161.07L248.42,161.44L247.95,161.85L248.71,162.17L249.87,162.26L251.02,162.09L251.57,161.7L251.91,161.32L252.46,161.01L253.08,160.72L253.33,160.36L253.86,159.88L254.49,159.78L255.63,159.74L256.62,159.62L257.64,159.46L258.13,159.07L258.43,158.7L259.11,158.33L260.09,158.07L260.93,157.88L261.49,157.54L262.05,157.37L262.78,157.21L263.77,157.31L264.67,157.21L265.65,157.09L266.75,157.15L267.48,156.88L267.99,156.21L268.36,156.48L268.83,156.96L269.67,157.15L270.63,157.23L271.59,157.11L272.61,157.19L273.55,157.21L274.18,157.11L275.02,157.17L275.78,157.39L276.68,157.25L277.76,157.25L278.68,157.11L279.72,157.25L280.39,156.91L280.89,156.58L281.58,156.31L282.83,155.56L283.48,155.7L284.24,155.98L284.91,156.33L286.18,156.94L287.16,156.96L288.08,156.96L289.16,156.84L290.23,156.7L291.06,156.43L291.74,156.13L292.86,156.09L293.6,155.88L294.39,156.07L294.9,156.39L295.6,156.7L296.7,156.66L297.38,156.91L298.58,157.17L299.83,157.27L300.87,157.19L301.65,156.88L302.32,156.56L303.22,156.48L304.12,156.62L305.16,156.72L306.1,156.56L307,156.56L307.88,156.66L308.8,156.76L309.7,156.58L310.78,156.43L311.8,156.39L312.94,156.39L313.85,156.29L314.76,156.21L315.03,155.72L315.07,155.31L315.7,155.58L315.87,156.03L316.21,156.45L316.62,156.78L317.46,156.96L318.6,156.9L319.91,156.88L320.81,156.82L322.12,156.82L323.06,156.8L324.37,156.84L325.49,156.91L326.2,157.23L326,157.6L326.65,157.89L327.72,158.13L328.84,158.39L330.13,158.56L331.48,158.72L332.5,158.87L333.64,158.9L334.28,158.56L335.17,158.84L335.93,159.15L336.81,159.38L338.03,159.48L339.18,159.6L339.67,159.99L340.81,160.23L341.57,160.58L342.69,160.74L343.84,160.72L344.92,160.78L346.11,160.76L347.31,160.83L348.43,160.97L349.46,161.21L350.5,161.4L351.21,161.7L351.09,162.09L350.56,162.44L350.11,162.89L349.76,163.24L349.29,163.66L347.98,163.81L347.39,164.17L346.09,164.38L345.64,164.77L344.96,165.15L344.24,165.46L343.82,165.87L343.57,166.24L343.47,166.69L343.49,167.07L344.06,167.46L344.28,167.83L344.74,168.18L346.6,168.32L347,168.75L345.19,168.91L343.67,169.12L341.77,169.16L340.92,169.73L340.75,170.2L340.32,170.57L339.79,170.95L341.12,171.28L341.63,171.69L342.49,172.06L343.71,172.39L345.1,172.71L346.6,173.02L348.89,173.34L349.41,173.83L352.29,174.04L352.48,174.12L353.22,174.41L355.99,174.16L358.28,174.47L360,174.71L360,180L180,180L0,180ZM112.25,143.85L113.55,144.45L114.95,144.7L114.5,145.2L113.55,145.25L113.04,144.9L112.71,145.3L111.85,145.61L110.77,145.5L110.04,145.2L108.99,145.05L107.73,144.49L106.72,143.96L105.34,142.84L106.16,143.05L107.57,143.72L108.89,144.07L109.41,143.62L109.73,142.93L110.65,142.52L111.37,142.64L111.75,143.1ZM121.45,141.1L122.25,141.55L121.95,141.9L120.6,142.2L120.15,141.85L119.3,142.3L118.8,141.85L120,141.25L120.85,141.5ZM250.28,139.71L248.74,139.77L248.72,139.24L248.87,138.83L248.94,138.62L249.58,138.94L250.53,139.07L250.56,139.25ZM325.4,130.79L326.36,131.14L326.91,131L327.69,130.81L328.29,130.87L328.36,132.06L328.02,132.41L327.91,133.21L327.56,132.94L326.87,133.64L326.66,133.58L326.05,133.55L325.43,132.69L325.3,132.03L324.72,131.16L324.74,130.7ZM353.02,130.92L353.25,131.33L353.96,130.93L354.25,131.35L354.25,131.77L353.88,132.23L353.22,132.97L352.71,133.37L353.08,133.85L352.31,133.87L351.45,134.24L351.18,134.9L350.62,135.91L349.83,136.36L349.33,136.64L348.41,136.62L347.76,136.29L346.68,136.22L346.51,135.85L347.05,135.11L348.3,134.12L348.95,133.94L349.67,133.56L350.52,133.03L351.13,132.51L351.57,131.77L351.95,131.51L352.1,130.96L352.8,130.49ZM354.61,126.16L355.34,127.21L355.36,126.53L355.81,126.8L355.96,127.56L356.76,127.88L357.44,127.96L358.01,127.58L358.52,127.7L358.28,128.58L357.97,129.17L357.21,129.15L356.94,129.45L357.03,129.88L356.89,130.07L356.51,130.61L356.01,131.29L355.24,131.69L355.07,131.43L354.65,131.28L355.23,130.46L354.9,129.91L353.82,129.51L353.85,129.15L354.57,128.8L354.74,128.03L354.7,127.38L354.29,126.71L354.32,126.53L353.84,126.12L353.06,125.24L352.63,124.53L353.01,124.45L353.55,125.01L354.33,125.27ZM347.12,112.16L346.74,112.4L346.19,112.13L345.47,111.68L344.83,111.15L344.17,110.45L344.03,110.11L344.46,110.12L345.02,110.46L345.46,110.8L345.78,111.08L346.6,111.7ZM358.37,107.34L358.72,107.63L358.55,108.15L357.93,108.29L357.38,108.16L357.29,107.72L357.67,107.38L358.12,107.51ZM360,106.56L359.36,106.8L358.73,107.01L358.6,106.64L359.1,106.43L359.41,106.38L360,106.07L360,106.56ZM0,106.07L0,106.07L0.21,106.02L0.08,106.5L0,106.56L0,106.56L0,106.56L0,106.07ZM347.85,106.47L347.52,106.6L347.18,106.16L347.22,105.89ZM347.11,104.93L347.27,105.74L347,105.61L346.79,105.67L346.65,105.39L346.63,104.63ZM230.06,103.56L230.22,104.76L230.48,105.23L230.38,105.71L230.2,106L229.86,105.41L229.67,105.71L229.86,106.45L229.78,106.87L229.5,107.11L229.43,107.95L229.04,109.12L228.55,110.5L227.93,112.39L227.55,113.78L227.1,114.94L226.28,115.18L225.41,115.6L224.83,115.35L224.04,114.99L223.76,114.46L223.7,113.57L223.35,112.78L223.25,112.06L223.43,111.34L223.89,111.16L223.9,110.83L224.38,110.07L224.47,109.44L224.23,108.96L224.04,108.33L223.96,107.41L224.31,106.85L224.45,106.22L224.94,106.18L225.5,105.97L225.87,105.79L226.31,105.78L226.88,105.21L227.71,104.59L228,104.09L227.87,103.66L228.29,103.78L228.84,103.09L228.87,102.49L229.2,102.04L229.54,102.47L229.81,102.9ZM323.56,103.76L323.92,104.55L324.56,104.17L324.9,104.59L325.37,104.99L325.27,105.43L325.49,106.29L325.64,106.78L325.89,106.91L326.16,107.76L326.06,108.28L326.39,108.96L327.47,109.48L328.18,109.96L328.85,110.39L328.72,110.63L329.29,111.26L329.68,112.34L330.08,112.12L330.48,112.56L330.73,112.4L330.9,113.46L331.61,114.08L332.07,114.46L332.86,115.27L333.14,116.07L333.16,116.64L333.09,117.26L333.57,118.11L333.51,118.99L333.34,119.46L333.07,120.35L333.09,120.92L332.89,121.64L332.45,122.55L331.71,123.04L331.34,123.82L331.01,124.31L330.71,125.17L330.33,125.67L330.08,126.42L329.95,127.11L330,127.43L329.42,127.77L328.31,127.81L327.38,128.22L326.92,128.61L326.32,129.04L325.49,128.59L324.88,128.42L325.03,127.9L324.49,128.09L323.61,128.81L322.75,128.54L322.18,128.38L321.61,128.31L320.64,128.02L319.99,127.4L319.81,126.64L319.58,126.14L319.08,125.73L318.12,125.61L318.45,125.13L318.21,124.39L317.72,125.08L316.83,125.26L317.35,124.71L317.51,124.13L317.89,123.64L317.81,122.9L317,123.75L316.37,124.09L315.99,124.89L315.21,124.48L315.24,123.95L314.61,123.22L314.09,122.85L314.27,122.62L312.99,122.01L312.29,121.98L311.33,121.5L309.53,121.59L308.24,121.95L307.1,122.28L306.15,122.22L305.09,122.73L304.22,122.96L304.03,123.48L303.66,123.89L302.81,123.91L302.18,124L301.3,123.82L300.58,123.93L299.89,123.98L299.3,124.51L299.01,124.46L298.5,124.75L298.03,125.06L297.29,125.03L296.62,125.03L295.56,124.39L295.03,124.2L295.05,123.62L295.54,123.49L295.71,123.26L295.68,122.9L295.8,122.21L295.69,121.61L295.16,120.6L295,120.03L295.04,119.46L294.64,118.81L294.62,118.52L294.17,118.12L294.05,117.33L293.48,116.54L293.34,116.12L293.78,116.55L293.44,115.62L293.94,115.91L294.23,116.3L294.22,115.79L293.72,115L293.63,114.68L293.39,114.38L293.5,113.81L293.71,113.56L293.84,113.06L293.74,112.47L294.15,111.76L294.22,112.52L294.65,111.83L295.46,111.49L295.95,111.07L296.71,110.7L297.16,110.62L297.44,110.75L298.23,110.37L298.84,110.26L298.99,110.04L299.25,109.95L299.8,109.98L300.86,109.68L301.4,109.24L301.65,108.71L302.24,108.2L302.29,107.8L302.31,107.26L303.01,106.41L303.43,107.27L303.86,107.07L303.5,106.6L303.82,106.11L304.26,106.33L304.38,105.57L304.93,105.08L305.17,104.68L305.67,104.51L305.69,104.23L306.13,104.35L306.14,104.1L306.58,103.95L307.07,103.82L307.8,104.28L308.36,104.87L308.98,104.88L309.62,104.97L309.41,104.42L309.89,103.62L310.34,103.36L310.18,103.11L310.62,102.54L311.22,102.18L311.73,102.3L312.58,102.11L312.56,101.6L311.82,101.27L312.36,101.13L313.02,101.38L313.55,101.79L314.39,102.04L314.68,101.94L315.3,102.25L315.88,101.96L316.26,102.05L316.49,101.86L316.95,102.35L316.68,102.89L316.31,103.29L315.96,103.32L316.08,103.72L315.78,104.22L315.43,104.72L315.5,105L316.3,105.55L317.07,105.87L317.58,106.22L318.3,106.81L318.59,106.81L319.11,107.06L319.26,107.37L320.22,107.71L320.87,107.37L321.07,106.83L321.27,106.39L321.4,105.84L321.7,105.04L321.56,104.56L321.63,104.27L321.52,103.7L321.65,102.94L321.84,102.74L321.69,102.41L321.93,101.88L322.12,101.33L322.14,101.04L322.52,100.67L322.8,101.16L322.87,101.78L323.12,101.9L323.16,102.33L323.52,102.83L323.6,103.4ZM342.12,100.48L342.4,100.83L341.7,100.82L341.32,100.21L341.92,100.45ZM300.71,100.24L300.29,100.26L298.97,99.56L299.9,99.36L300.43,99.67L300.78,99.97ZM340.85,99.87L340.46,99.9L339.85,99.79L339.64,99.64L339.7,99.24L340.36,99.4L340.69,99.61ZM341.68,99.6L341.53,99.78L340.79,98.92L340.58,98.32L340.92,98.32L341.28,99.12ZM304.44,100.14L303.58,100.36L303.46,100.24L303.55,99.9L303.98,99.29L304.97,98.89L305.09,98.66L305.95,98.43L306.64,98.4L306.96,98.27L307.34,98.4L306.97,98.67L305.93,99.11L305.09,99.39ZM297.9,98.09L298.26,98.36L298.88,98.28L299.13,98.71L297.97,98.91L297.28,99.04L296.74,99.03L297.08,98.46L297.63,98.45ZM302.9,98.09L302.76,98.65L301.25,98.93L299.92,98.81L299.92,98.45L300.71,98.24L301.34,98.54L302.01,98.46ZM339.88,98.34L339.92,98.54L339.13,98.11L338.59,97.75L338.21,97.42L338.36,97.32L338.82,97.56L339.64,98.02ZM337.54,97.35L337.34,97.4L336.9,97.18L336.49,96.77L336.54,96.6L337.14,97.02ZM288.62,96.78L290.54,96.88L290.76,96.46L292.61,96.95L292.98,97.59L294.48,97.78L295.71,98.37L294.57,98.75L293.46,98.35L292.56,98.38L291.52,98.3L290.59,98.12L289.43,97.74L288.69,97.64L288.28,97.77L286.45,97.36L286.28,96.93L285.36,96.85L286.05,95.9L287.26,95.96L288.07,96.35L288.49,96.42ZM314.73,96.21L314.21,96.89L314.11,96.14L314.29,95.78L314.5,95.44L314.73,95.74ZM335.88,96.82L335.6,96.92L335.17,96.54L334.73,95.9L334.52,95.14L334.65,95.04L334.76,95.34L335.06,95.57L335.55,96.2L336.02,96.54ZM331.98,95.48L331.46,95.56L331.3,95.84L330.75,96.08L330.24,96.32L329.71,96.32L328.89,96.03L328.32,95.75L328.4,95.44L329.3,95.58L329.85,95.51L330,95.03L330.14,95L330.24,95.53L330.81,95.46L331.09,95.11L331.65,94.76L331.54,94.17L332.14,94.15L332.34,94.31L332.32,94.87ZM307.25,93.46L306.87,93.79L306.18,93.61L305.99,93.18L307,93.13ZM310.47,93.09L310.83,93.86L309.99,93.45L309.16,93.36L308.59,93.43L307.9,93.39L308.13,92.84L309.37,92.8ZM333.14,94.5L332.83,94.77L332.64,94.18L332.41,93.79L331.95,93.46L331.38,93.04L330.66,92.74L330.94,92.5L331.48,92.78L331.82,93L332.24,93.24L332.64,93.66L333.02,93.98ZM314.14,91.15L314.42,92.77L315.46,93.37L316.29,92.31L317.44,91.7L318.33,91.7L319.19,92.05L319.93,92.41L321,92.6L322.74,93.29L324.58,93.86L325.27,94.37L325.83,94.88L325.98,95.47L327.65,96.08L327.89,96.61L326.97,96.72L327.19,97.39L328.09,98.04L328.73,99.11L329.31,99.07L329.27,99.51L330.04,99.68L329.74,99.87L330.8,100.29L330.69,100.58L330.03,100.65L329.78,100.39L328.92,100.28L327.91,100.13L327.14,99.49L326.57,98.94L326.05,98.07L324.74,97.63L323.9,97.92L323.29,98.25L323.41,98.98L322.63,99.33L322.07,99.16L321.03,99.12L320.14,98.3L319.13,98.1L318.88,98.38L317.61,98.41L318.04,97.6L318.67,97.32L318.41,96.23L317.93,95.39L315.99,94.55L315.17,94.46L313.66,93.54L313.37,94.02L312.98,94.11L312.76,93.75L312.75,93.31L311.99,92.82L313.07,92.46L313.78,92.48L313.7,92.21L312.23,92.21L311.84,91.62L310.94,91.43L310.52,90.94L311.87,90.7L312.38,90.37L313.98,90.78ZM305.24,88.58L304.44,89.57L303.68,89.76L302.72,89.57L301.06,89.62L300.18,89.76L300.04,90.52L300.93,91.41L301.47,90.96L303.34,90.62L303.26,91.08L302.82,90.93L302.39,91.52L301.51,91.91L302.45,93.19L302.27,93.53L303.17,94.68L303.16,95.34L302.63,95.63L302.24,95.28L302.72,94.46L301.74,94.85L301.49,94.57L301.62,94.19L300.9,93.6L300.97,92.63L300.3,92.93L300.39,94.1L300.43,95.53L299.8,95.67L299.37,95.38L299.65,94.46L299.5,93.49L299.08,93.49L298.77,92.8L299.18,92.15L299.32,91.35L299.83,89.85L300.03,89.43L300.89,88.69L301.67,88.99L302.93,89.12L304.08,89.08L305.07,88.36ZM308.69,88.87L308.63,89.74L308.12,89.64L307.97,90.25L308.38,90.78L308.1,90.9L307.7,90.27L307.4,88.99L307.6,88.19L307.93,87.83L308,88.37L308.6,88.46ZM285.82,95.85L284.71,95.87L283.87,95.04L282.58,94.22L282.16,93.61L281.4,92.8L280.9,92.05L280.14,90.65L279.26,89.82L278.97,88.96L278.6,88.18L277.7,87.55L277.18,86.69L276.43,86.13L275.38,85.03L275.29,84.52L275.94,84.56L277.48,84.75L278.37,85.73L279.14,86.41L279.69,86.83L280.64,87.9L281.66,87.92L282.5,88.6L283.08,89.44L283.84,89.9L283.44,90.71L284.01,91.06L284.37,91.08L284.54,91.78L284.89,92.34L285.62,92.43L286.11,93.06L285.86,94.31ZM297.87,88.17L299,89.1L297.81,89.22L297.48,89.9L297.52,90.8L296.56,91.49L296.53,92.48L296.15,94.01L296,93.66L294.86,94.11L294.47,93.5L293.76,93.44L293.26,93.12L292.07,93.48L291.7,93L291.05,93.05L290.22,92.93L290.07,91.59L289.57,91.31L289.09,90.46L288.95,89.58L289.07,88.66L289.66,87.99L290.4,88.34L291.17,88.15L291.37,87.3L291.8,87.11L293,86.9L293.71,86.11L294.21,85.47L294.6,85.1L295.45,84.55L296.22,83.86L296.73,83.08L297.13,83.07L297.64,83.58L297.69,84.01L298.35,84.29L299.18,84.59L299.11,84.98L298.44,85.03L298.62,85.52L297.88,85.86L297.31,86.76L298.05,87.71ZM306.38,81.59L306.48,82.25L306.54,82.81L306.2,83.73L305.83,82.71L305.36,83.21L305.68,83.95L305.4,84.42L304.22,83.84L303.94,83.11L304.24,82.64L303.61,82.17L303.3,82.58L302.82,82.54L302.09,83.1L301.92,82.81L302.31,81.96L302.94,81.68L303.49,81.31L303.84,81.76L304.6,81.49L304.76,81.04L305.47,81.01L305.41,80.24L306.22,80.71L306.31,81.22ZM261.22,83.8L260.35,84.03L259.87,83.24L259.7,81.8L260.15,80.18L260.84,80.73L261.31,81.44L261.79,82.48L261.64,83.52ZM119.06,79.89L118.23,80L118.05,79.91L118.34,79.63L118.32,79.24L118.89,79.11L119.1,79.15ZM303.98,79.72L303.62,80.05L303.31,80.68L303,80.98L302.38,80.29L302.59,80.02L302.84,79.74L302.95,79.12L303.5,79.06L303.34,79.73L304.08,78.77ZM298.5,80.68L297.18,81.63L297.67,80.93L298.39,80.32L298.99,79.62L299.51,78.63L299.69,79.45L299.03,80ZM301.88,78.11L302.48,78.42L303.12,78.42L303.1,78.83L302.64,79.26L302,79.56L301.97,79.09L302.04,78.58ZM305.5,77.84L305.78,78.95L305.01,78.69L305.03,79.02L305.28,79.64L304.8,79.87L304.76,79.16L304.46,79.11L304.3,78.51L304.89,78.58L304.88,78.21L304.27,77.44L305.23,77.46ZM301.53,76.93L301.26,77.79L300.83,77.3L300.32,76.53L301.18,76.57ZM301.32,71.5L301.94,71.78L302.24,71.52L302.34,71.78L302.17,72.19L302.51,72.91L302.25,73.74L301.66,74.07L301.51,74.87L301.73,75.67L302.26,75.78L302.7,75.66L303.95,76.22L303.85,76.76L304.18,77L304.08,77.46L303.3,76.97L302.93,76.45L302.67,76.81L302.04,76.22L301.13,76.36L300.63,76.14L300.68,75.73L300.99,75.47L300.69,75.24L300.56,75.6L300.07,75.03L299.92,74.59L299.88,73.64L300.29,73.97L300.39,72.4L300.71,71.49ZM114.41,71.77L114.15,72.02L113.4,72.02L112.81,72.05L112.76,71.63L112.9,71.48L113.72,71.48L114.23,71.57ZM103.1,72.13L102.8,72.3L102.23,72.14L101.66,71.77L101.78,71.55L102.2,71.48L102.43,71.51L103.11,71.6L103.63,71.84L103.8,72.11ZM107.42,70.13L108.29,70.29L108.41,70.12L109.19,70.12L109.79,70.38L110.05,70.35L110.23,70.71L110.78,70.69L110.74,70.99L111.19,71.02L111.68,71.39L111.31,71.79L110.83,71.58L110.38,71.62L110.05,71.57L109.87,71.75L109.48,71.82L109.33,71.57L109,71.72L108.6,72.4L108.34,72.24L108.29,71.96L107.63,71.79L107.16,71.86L106.55,71.78L106.08,71.97L105.54,71.66L105.63,71.34L106.55,71.47L107.31,71.55L107.67,71.33L107.21,70.9L107.22,70.52L106.59,70.36L106.81,70.08ZM290.34,71.32L289.48,71.8L288.65,71.49L288.63,70.63L289.12,70.18L290.21,69.9L290.79,69.92L291.01,70.3L290.57,70.74ZM24.46,70.92L24.31,71.08L24.06,70.94L24.09,70.66L23.93,70.3L23.98,70.19L24.15,70.02L24.08,69.83L24.14,69.73L24.21,69.75L24.6,69.92L24.78,70.01L24.94,70.14L25.19,70.49L25.17,70.55L24.78,70.76ZM23.92,69.36L23.58,69.43L23.41,69.22L23.3,69.14L23.29,69.07L23.39,68.99L23.74,69.08L24.01,69.24ZM23.24,68.82L23.21,68.93L22.67,68.9L22.75,68.78ZM22.35,68.68L22.29,68.74L22.22,68.72L21.87,68.69L21.75,68.46L21.71,68.42L21.97,68.28L22.06,68.35ZM20.65,68.02L20.53,68.12L20.2,67.94L20.25,67.86L20.41,67.76L20.64,67.78ZM100.32,67.23L100.72,67.6L101.65,67.49L102.01,67.72L102.85,68.34L103.48,68.79L103.81,68.78L104.4,68.98L104.33,69.27L105.07,69.31L105.82,69.72L105.7,69.95L105.04,70.08L104.37,70.13L103.68,70.05L102.24,70.14L102.91,69.59L102.51,69.33L101.86,69.26L101.52,68.97L101.28,68.4L100.71,68.44L99.78,68.17L99.48,67.96L98.18,67.81L97.83,67.61L98.21,67.36L97.22,67.31L96.51,67.83L96.09,67.85L95.95,68.09L95.45,68.2L95.03,68.1L95.55,67.79L95.77,67.43L96.22,67.21L96.73,67.02L97.49,66.92L97.73,66.81L98.59,66.88L99.38,66.89ZM102.46,66.24L102.22,66.29L101.97,65.71L101.59,65.43L101.81,64.79L102.11,64.83L102.46,65.66ZM301.18,67.21L300.75,68.03L300.22,67.19L300.11,66.44L300.69,65.46L301.5,64.7L301.95,65L301.78,65.61ZM102.18,63.42L101.09,63.58L101.02,63.21L101.49,63.13L102.15,63.16ZM103,63.41L102.83,64.12L102.64,63.99L102.66,63.47L102.21,63.07L102.21,62.96ZM314.64,55.85L314.77,56.19L314.2,56.8L313.79,56.48L313.28,56.71L313.02,57.3L312.36,57.01L312.37,56.54L312.93,55.94L313.49,56.06L313.91,55.64ZM214.58,54.33L213.9,54.75L213.98,54.94L214,55.02L212.98,55.43L212.49,55.3L212.26,54.9L212.73,54.86L212.8,54.86L212.95,54.61L213.67,54.63ZM203.7,54.29L204.25,54.63L205.03,54.57L205.77,54.65L205.75,54.82L206.29,54.7L206.16,55L204.72,55.08L204.73,54.91L203.51,54.72ZM195.52,51.77L195.16,52.56L195.31,52.87L195.1,53.38L194.33,53L193.83,52.9L192.43,52.39L192.57,51.87L193.74,51.96L194.76,51.86ZM189.21,48.79L189.81,49.5L189.67,50.82L189.21,50.76L188.81,51.09L188.43,50.83L188.39,49.62L188.16,49.05L188.71,49.1ZM320.98,52.86L320.6,53.66L320.77,54.16L320.25,54.86L318.97,55.33L317.22,55.39L315.79,56.54L315.12,56.15L315.08,55.4L313.34,55.62L312.16,56.1L310.99,56.11L312,56.85L311.33,58.55L310.69,58.97L310.2,58.58L310.45,57.68L309.82,57.39L309.41,56.7L310.36,56.4L310.88,55.77L311.89,55.25L312.62,54.57L314.61,54.27L315.68,54.47L316.72,52.7L317.39,53.17L318.86,52.17L319.43,51.78L320.05,50.56L319.88,49.44L320.31,48.8L321.37,48.62L321.92,50.01L321.88,50.82L320.96,51.83ZM189.56,47.85L189.23,48.62L188.78,48.42L188.54,47.74L188.75,47.37L189.39,46.99ZM323.91,45.83L324.61,46.04L325.32,45.62L325.54,46.74L324.06,47.01L323.18,48.01L321.61,47.32L321.07,48.41L319.96,48.43L319.82,47.44L320.31,46.67L321.38,46.61L321.67,45.23L321.97,44.45L323.14,45.49ZM116.34,43.45L117.06,43.58L117.99,43.56L117.49,43.97L117.13,44.03L115.86,43.61L115.61,43.27L115.99,42.96ZM118.19,40.89L117.71,40.91L116.41,40.6L115.48,40.13L115.83,40.04L117.14,40.29L118.16,40.71ZM56.49,41.49L55.99,41.63L54.35,41.17L54.04,40.82L53.15,40.47L52.97,40.19L51.94,40L51.56,39.46L51.64,39.23L52.69,39.45L53.31,39.6L54.25,39.71L54.58,40.05L55.08,40.52L56.08,40.94ZM123.87,39.31L123.2,40.19L123.86,39.85L124.53,40.06L124.18,40.41L125.07,40.69L125.53,40.44L126.52,40.75L126.21,41.48L126.91,41.31L127.04,41.84L127.35,42.46L126.93,43.34L126.48,43.38L125.82,43.19L126.04,42.37L125.76,42.25L124.6,43.12L124,43.08L124.71,42.61L123.75,42.37L122.67,42.43L120.73,42.4L120.58,42.1L121.2,41.75L120.77,41.48L121.61,40.87L122.64,39.28L123.26,38.71L124.13,38.37L124.59,38.41L124.4,38.68ZM47.29,35.96L48.25,35.88L47.95,37.02L48.82,37.82L48.42,37.82L47.82,37.36L47.45,36.9L46.94,36.59L46.76,36.15L46.82,35.83ZM323.65,39.25L324.65,41.02L323.18,40.69L322.56,42.14L323.54,43.16L323.51,43.86L322.75,43.26L322.09,44.03L321.91,43.19L322.02,42.22L321.9,41.14L322.13,40.39L322.18,39.05L321.59,38.06L321.68,36.7L322.61,36.24L322.21,35.77L322.65,35.63L322.92,36.3L323.26,37.26L323.24,38.24ZM173.21,37.74L171.44,38.33L170.02,38.18L170.83,37.14L170.31,36.12L171.67,35.33L172.43,34.87L173.27,34.83L174.34,35.44L173.8,36.13L173.97,36.85ZM192.69,34.39L192.09,35.2L191.04,34.64L190.9,34.22L192.37,33.89ZM26.99,32.88L26,33.26L25.48,33.01L25.33,32.54L26.24,32.18L26.77,32.03L27.44,32.1L27.86,32.41ZM177,31.37L175.93,32.45L176.95,32.31L178.04,32.32L177.78,33.13L176.88,34.03L177.91,34.09L178.89,35.38L179.57,35.54L180.19,36.68L180.47,37.07L181.68,37.26L181.56,37.9L181.05,38.19L181.45,38.71L180.55,39.23L179.21,39.22L177.51,39.5L177.04,39.3L176.38,39.77L175.46,39.66L174.76,40.04L174.22,39.84L175.69,38.79L176.59,38.57L175.02,38.41L174.73,38.01L175.78,37.7L175.23,37.16L175.42,36.5L176.91,36.6L177.05,36.02L176.37,35.39L175.16,35.21L174.92,34.94L175.28,34.49L174.95,34.22L174.41,34.69L174.35,33.73L173.85,33.22L174.21,32.18L174.99,31.37L175.79,31.45ZM14.42,30.09L13.81,30.25L13.15,30.06L12.55,29.79L13.53,29.62L14.32,29.71ZM100.73,27.84L100.34,28.37L99.9,28.28L99.64,27.98L99.68,27.91L100.07,27.62L100.48,27.64ZM98.1,27.29L96.93,27.84L96.23,27.82L96.01,27.55L96.75,27.09L98.12,27.1ZM8.27,26.22L8.88,26.41L9.51,26.31L10.32,26.57L11.31,26.7L11.23,26.81L10.47,27.02L9.71,26.81L9.33,26.62L8.45,26.68L8.21,26.59ZM94.84,24.34L95.02,24.78L95.54,24.63L96.12,24.89L97.21,25.23L98.36,25.55L98.45,26.02L99.18,25.94L99.9,26.27L99.01,26.59L97.45,26.35L96.89,25.9L95.9,26.43L94.48,26.95L94.13,26.36L92.78,26.46L93.65,25.96L93.77,25.18L94.12,24.26ZM165.49,23.54L165.26,24.19L166.39,24.87L165.09,25.64L162.21,26.32L161.34,26.5L160.03,26.36L157.24,26.04L158.22,25.6L156.04,25.11L157.81,24.92L157.77,24.62L155.67,24.39L156.35,23.74L157.87,23.59L159.42,24.27L160.94,23.72L162.2,24.01L163.83,23.47ZM104.13,22.85L103.01,22.9L102.76,22.41L103.19,21.85L104.11,21.71L104.89,21.99L104.9,22.42L104.78,22.56ZM229.11,48.72L229.62,49.43L230.09,49.47L230.39,49.74L229.57,49.82L229.39,50.6L229.23,50.95L228.86,51.18L228.88,51.68L229.2,52.42L230.15,52.63L230.84,53.13L232.26,53.3L233.83,53.04L233.92,52.8L233.74,52.09L233.88,51.05L233.1,50.71L233.36,50.02L232.7,49.97L232.92,49.12L233.86,49.37L234.74,49.05L234.01,48.45L233.72,47.88L232.92,48.13L232.81,48.87L232.5,48.22L232.45,47.97L232.69,47.56L232.5,47.21L231.34,46.87L230.89,45.97L230.34,45.72L230.31,45.39L231.28,45.49L231.32,44.75L232.17,44.59L233.04,44.74L233.22,43.77L233.04,43.15L232.04,43.2L231.19,42.95L230.04,43.39L229.1,43.6L228.65,44.19L227.68,44.36L226.68,45.39L227.59,46.34L227.49,47.01L228.58,48.19ZM360,25.02L359.99,25.03L358.71,25.47L357.41,25.39L358.31,25.92L358.91,26.75L359.37,27.02L359.49,27.43L359.23,27.7L357.36,27.48L354.57,28.23L353.68,28.35L352.15,29.05L350.7,29.66L350.33,30.12L348.9,29.43L346.29,30.21L345.84,29.84L344.88,30.27L343.54,30.13L343.22,30.79L342.02,31.76L342.05,32.16L343.19,32.38L343.06,33.84L342.13,33.88L341.7,34.71L342.12,35.15L340.37,35.65L340.02,36.8L338.53,37.04L338.23,38.06L336.79,38.99L336.42,38.3L335.99,36.84L335.43,34.62L335.92,33.23L336.76,32.64L336.81,32.17L338.36,31.94L340.15,30.69L341.87,29.66L343.67,28.86L344.47,27.45L343.26,27.53L342.66,28.36L340.12,29.45L339.3,28.23L336.72,28.57L334.22,30.24L335.04,30.85L332.81,31.12L331.26,31.22L331.34,30.5L329.78,30.34L328.55,30.84L325.49,30.66L322.2,30.96L318.96,32.91L315.13,35.27L316.7,35.4L317.19,36.02L318.16,36.25L318.8,35.74L319.9,35.81L321.35,36.91L321.38,37.76L320.6,38.76L320.51,39.95L320.06,41.55L318.56,43L318.22,43.69L316.86,44.86L315.51,46.01L314.87,46.6L313.54,47.19L312.91,47.2L312.28,46.72L310.94,47.45L310.78,47.78L310.4,47.72L309.97,48.06L309.67,48.4L309.7,49.12L309.19,49.34L309.01,49.52L308.63,49.81L307.97,49.97L307.53,50.24L307.5,50.68L307.39,50.79L307.79,50.95L308.35,51.39L309.21,52.57L309.46,53.22L309.47,54.37L309.09,54.92L308.18,55.11L307.39,55.52L306.49,55.61L306.37,55.07L306.56,54.32L306.12,53.27L306.86,53.11L306.18,52.25L305.69,52.06L305.57,52.25L305.28,52.33L305.24,52.14L304.98,52.05L304.71,51.89L304.99,51.45L305.22,51.33L305.13,51.15L305.39,50.61L305.32,50.45L304.74,50.34L304.26,50.07L302.87,50.36L302.13,50.83L301.05,51.1L301.59,50.64L301.38,50.25L302.17,49.58L301.64,49.05L300.77,49.41L299.64,50.1L299.02,50.75L298.04,50.8L297.53,51.26L298.06,51.94L298.88,52.1L298.91,52.55L299.7,52.84L300.82,52.13L301.71,52.52L302.36,52.54L302.52,53.07L301.1,53.35L300.64,53.89L299.66,54.39L299.15,55.09L300.23,55.64L300.62,56.62L301.23,57.54L301.91,58.31L301.89,59.05L301.27,59.32L301.5,59.86L302.09,60.17L301.94,60.98L301.68,61.77L301.13,61.86L300.39,62.95L299.58,64.26L298.66,65.45L297.28,66.37L295.89,67.22L294.76,67.33L294.15,67.78L293.81,67.45L293.24,67.95L291.84,68.45L290.79,68.6L290.44,69.66L289.89,69.72L289.63,68.99L289.86,68.61L288.52,68.28L288.05,68.45L286.71,69.3L285.88,70.25L285.66,70.94L286.43,72L287.36,73.3L288.27,73.92L288.88,74.72L289.33,76.57L289.2,78.33L288.37,78.99L287.22,79.64L286.4,80.47L285.16,81.4L284.8,80.76L285.08,80.08L284.33,79.51L283.5,79.37L283.09,78.85L282.58,77.81L281.69,77.35L280.83,77.37L280.98,76.59L280.1,76.59L280.02,77.69L279.48,79.15L279.15,80.04L279.22,80.76L279.87,80.79L280.28,81.7L280.46,82.57L281.02,83.14L281.62,83.26L282.14,83.78L282.37,83.87L282.96,84.47L283.38,85.15L283.44,85.82L283.33,86.27L283.43,86.62L283.5,87.21L283.86,87.48L284.25,88.37L284.23,88.71L283.52,88.77L282.57,88.03L281.39,87.24L281.27,86.73L280.69,86.06L280.56,85.23L280.2,84.69L280.31,83.96L280.09,83.54L279.69,83.15L279.52,82.66L278.99,82.09L278.5,81.62L278.34,82.21L278.15,81.65L278.26,81.03L278.55,80.07L278.46,79.32L278.77,78.56L278.43,77.97L278.51,76.88L278.1,76.36L277.78,75.16L277.6,73.9L277.16,73.07L276.5,73.57L275.37,74.29L274.81,74.2L274.19,73.96L274.54,72.72L274.33,71.79L273.54,70.63L273.66,70.27L273.08,70.14L272.37,69.33L272.08,68.81L272.03,68.3L271.84,67.82L271.42,67.23L270.5,67.2L270.59,67.61L270.27,68.16L269.85,67.96L269.7,68.14L269.42,68.03L269.03,67.94L268.89,68.31L268.21,68.3L266.98,68.5L267.03,69.26L266.5,69.85L265.06,70.52L263.94,71.7L263.19,72.33L262.19,72.98L262.19,73.44L261.69,73.69L260.79,74.05L260.33,74.1L260.02,74.86L260.23,76.16L260.29,76.99L259.86,77.94L259.86,79.64L259.34,79.69L258.89,80.45L259.19,80.78L258.28,81.07L257.94,81.75L257.54,82.03L256.59,81.1L256.13,79.7L255.75,78.69L255.4,78.22L254.86,77.26L254.62,76.01L254.44,75.38L253.53,74.01L253.12,72.07L252.82,70.79L252.82,69.58L252.63,68.64L251.17,69.24L250.47,69.12L249.17,67.91L249.64,67.55L249.35,67.16L248.18,66.31L247.44,66.05L247.15,65.34L246.37,64.58L244.53,64.76L242.91,64.78L241.5,64.92L239.61,64.62L238.53,64.39L237.4,64.26L236.97,63.03L236.49,62.86L235.72,63.04L234.72,63.52L233.49,63.19L232.48,62.42L231.52,62.13L230.85,61.19L230.11,59.85L229.58,60.01L228.94,59.68L228.57,60.07L227.98,60.02L228.18,60.47L228.09,60.69L228.42,61.45L228.81,62.31L229.3,62.54L229.47,62.89L230.15,63.31L230.21,63.72L230.11,64.06L230.24,64.39L230.53,64.67L230.66,65L230.81,65.25L230.74,64.52L231.01,63.99L231.29,63.88L231.59,64.2L231.61,64.78L231.39,65.37L231.58,65.76L231.76,65.71L231.8,65.98L232.58,65.82L233.4,65.85L234.01,65.88L234.69,65.2L235.44,64.56L236.07,63.94L236.36,63.6L236.49,63.69L236.39,64.1L236.26,64.29L236.4,65.07L236.85,65.76L237.4,66.12L238.14,66.25L238.73,66.43L239.18,67.01L239.45,67.34L239.81,67.47L239.81,67.69L239.44,68.29L239.28,68.57L238.86,68.89L238.49,69.57L238.03,69.52L237.83,69.76L237.67,70.26L237.79,70.93L237.7,71.05L237.24,71.05L236.61,71.43L236.51,71.91L236.28,72.12L235.66,72.12L235.27,72.37L235.27,72.77L234.79,73.05L234.24,72.96L233.57,73.29L233.11,73.35L232.39,73.62L232.19,74.06L232.17,74.4L231.17,74.82L229.57,75.29L228.68,76L228.24,76.05L227.94,75.99L227.35,76.41L226.72,76.6L225.88,76.65L225.63,76.71L225.41,76.97L225.14,77.05L224.99,77.3L224.49,77.28L224.17,77.41L223.48,77.36L223.22,76.78L223.25,76.23L223.09,75.94L222.89,75.2L222.6,74.79L222.81,74.74L222.7,74.28L222.82,74.09L222.78,73.65L222.65,73.22L222.35,72.92L222.27,72.53L221.76,72.17L221.22,71.33L220.94,70.51L220.25,69.83L219.8,69.66L219.14,68.71L219.02,68.01L219.07,67.42L218.49,66.31L218.03,65.92L217.49,65.71L217.15,65.14L217.21,64.92L216.93,64.4L216.64,64.17L216.25,63.43L215.64,62.62L215.13,61.94L214.63,61.94L214.79,61.39L214.83,61.04L214.95,60.64L214.92,60.5L214.64,60.9L214.43,61.66L214.16,62.18L213.92,62.35L213.59,62.03L213.14,61.58L212.42,60.15L212.32,60.24L212.73,61.3L213.35,62.3L214.1,63.86L214.47,64.4L214.8,64.97L215.69,66.07L215.49,66.25L215.53,66.9L216.69,67.79L216.87,68L217.19,68.98L216.97,69.16L217.11,70.19L217.48,71.39L217.86,71.63L218.41,72L218.99,73.16L219.27,74.08L219.81,74.56L221.18,75.51L221.73,76.08L222.28,76.66L222.59,77L223.08,77.3L223.32,77.61L223.29,78.02L222.72,78.26L223.14,78.54L223.47,78.72L223.67,79.13L224.12,79.55L224.61,79.56L225.56,79.3L226.64,79.18L227.53,78.87L228.02,78.81L228.38,78.62L228.95,78.59L229.27,78.57L229.73,78.42L230.26,78.32L230.73,77.98L231.11,77.98L231.13,78.25L231.04,78.83L231.05,79.36L230.83,79.72L230.55,80.8L230.07,81.92L229.45,83.2L228.6,84.66L227.74,85.78L226.56,87.14L225.56,87.95L224.07,88.95L223.14,89.71L222.04,90.92L221.81,91.45L221.59,91.68L220.88,92.08L220.64,92.5L220.26,92.57L220.12,93.28L219.8,93.68L219.61,94.35L219.2,94.68L218.74,95.91L218.8,96.48L219.44,96.84L219.47,97.1L219.2,97.7L219.25,98.01L219.19,98.49L219.54,99.11L219.95,100.1L220.32,100.32L220.48,100.77L220.44,101.76L220.56,102.64L220.6,104.2L220.78,104.69L220.48,105.41L220.09,106.1L219.45,106.72L218.54,107.1L217.41,107.59L216.28,108.66L215.9,108.84L215.2,109.55L214.79,109.78L214.7,110.5L215.18,111.25L215.37,111.84L215.39,112.14L215.56,112.09L215.53,113.07L215.37,113.53L215.61,113.71L215.46,114.12L215.04,114.48L214.22,114.82L213.01,115.36L212.57,115.73L212.66,116.15L212.92,116.22L212.83,116.74L212.58,117.47L212.46,118.3L212.2,118.75L211.52,119.26L211.33,119.4L210.9,119.91L210.62,120.42L210.05,121.14L208.92,122.17L208.22,122.77L207.47,123.23L206.42,123.62L205.91,123.67L205.78,123.95L205.17,123.8L204.68,123.99L203.59,123.79L202.99,123.92L202.57,123.86L201.54,124.26L200.69,124.42L200.07,124.8L199.61,124.82L199.19,124.46L198.86,124.44L198.42,124L198.38,124.14L198.24,123.87L198.25,123.28L197.93,122.61L198.25,122.43L198.22,121.66L197.57,120.73L197.07,119.88L197.06,119.88L196.35,118.58L195.6,117.82L195.21,117.09L194.99,116.12L194.74,115.39L194.41,113.85L194.38,112.66L194.26,112.11L193.87,111.7L193.35,110.87L192.83,109.67L192.61,109.05L191.8,108.07L191.73,107.3L191.64,106.67L191.78,105.79L192.12,104.88L192.18,104.45L192.5,103.55L192.74,103.14L193.31,102.48L193.64,102.04L193.74,101.3L193.69,100.73L193.39,100.37L193.12,99.77L192.88,99.17L192.93,98.96L193.24,98.56L192.93,97.6L192.73,96.93L192.23,96.29L192.32,96.1L192.18,95.79L191.91,95.04L191.09,93.98L190.07,92.97L189.41,92.14L188.8,91.11L188.83,90.78L189.05,90.46L189.29,89.73L189.49,88.99L189.3,88.84L189.65,87.72L189.79,86.93L189.41,86.27L188.95,86.1L188.75,85.65L188.49,85.5L188.5,85.23L187.46,85.59L187.08,85.53L186.7,85.76L185.9,85.74L185.36,85.11L185.03,84.39L184.33,83.73L183.57,83.74L182.69,83.74L181.87,83.86L181.06,84.07L179.49,84.66L178.94,85L178.04,85.29L177.14,85L176.69,85.02L175.99,84.82L175.35,84.83L174.17,85.01L173.47,85.29L172.48,85.66L172.29,85.64L172.02,85.64L170.99,85.17L170.09,84.41L169.23,83.86L168.56,83.21L168.29,83.14L167.57,82.74L167.05,82.2L166.88,81.84L166.75,81.1L166.31,80.51L165.93,80.11L165.67,79.98L165.42,79.78L165.31,79.34L165.16,79.12L164.87,78.96L164.33,78.54L163.91,78.47L163.69,78.19L163.69,78.04L163.39,77.83L163.32,77.61L163.16,76.85L163.29,76.4L162.87,75.63L162.38,75.27L162.82,75.08L163.3,74.38L163.54,73.86L163.45,73.33L163.73,72.83L163.85,71.89L163.74,70.9L163.62,70.41L163.72,69.91L163.46,69.43L162.94,69L162.98,68.58L163.03,68.11L163.41,67.84L163.74,67.32L163.67,66.98L164.02,66.28L164.58,65.64L164.91,65.48L165.18,64.9L165.2,64.36L165.56,63.75L166.22,63.38L166.86,62.36L167.38,61.96L168.31,61.85L169.1,61.17L169.6,60.9L170.44,60.07L170.18,58.82L170.57,57.96L170.7,57.43L171.34,56.76L172.34,56.3L173.09,55.89L173.76,54.85L174.07,54.24L174.81,54.24L175.41,54.67L176.36,54.6L177.4,54.82L177.83,54.83L178.79,54.28L179.87,54.11L180.5,53.7L181.47,53.39L183.16,53.22L184.82,53.14L185.32,53.28L186.26,52.89L187.33,52.88L187.74,53.11L188.42,53.05L189.51,52.65L190.21,52.77L190.18,53.28L191.03,52.91L191.1,53.1L190.6,53.59L190.59,54.05L190.94,54.3L190.81,55.17L190.15,55.67L190.34,56.21L190.86,56.23L191.11,56.71L191.49,56.86L192.66,57.21L193.08,57.12L193.92,57.29L195.24,57.73L195.71,58.62L196.61,58.82L198.02,59.24L199.09,59.73L199.58,59.47L200.05,59.01L199.82,58.25L200.13,57.76L200.85,57.29L201.54,57.16L202.89,57.36L203.24,57.81L203.61,57.81L203.93,57.98L204.92,58.1L205.17,58.43L206.49,58.41L207.46,58.68L208.45,58.97L208.91,59.13L209.68,58.81L210.09,58.53L210.98,58.44L211.69,58.57L211.96,59.07L212.19,58.74L212.99,58.98L213.77,59.03L214.27,58.78L214.55,58.45L214.49,58.39L214.75,57.93L214.95,57.17L215.1,56.92L215.13,56.91L215.48,56.09L215.98,55.39L216,55.35L215.9,54.59L216.15,54.18L215.78,53.72L216.16,53.35L215.55,53.44L214.71,53.2L214.03,53.78L212.51,53.89L211.7,53.36L210.62,53.32L210.39,53.74L209.7,53.86L208.73,53.32L207.64,53.34L207.05,52.35L206.32,51.79L206.8,51.01L206.17,50.54L207.28,49.58L208.82,49.54L209.24,48.78L211.15,48.91L212.35,48.26L213.51,47.98L215.17,47.96L216.91,48.66L218.35,49.05L219.51,48.9L220.37,48.99L221.55,48.46L221.7,48.04L221.45,47.36L220.88,46.99L220.32,46.87L219.95,46.56L218.68,45.72L217.54,45.34L216.68,44.76L217.4,44.59L218.23,43.76L217.67,43.36L219.15,42.95L219.12,42.74L218.22,42.9L217.42,42.98L216.76,43.3L215.82,43.35L214.96,43.73L215.02,44.35L215.51,44.59L216.53,44.53L216.33,44.89L215.24,45.06L213.88,45.64L213.33,45.43L213.55,44.97L212.45,44.67L212.63,44.48L213.59,44.15L213.3,43.92L211.74,43.67L211.67,43.29L210.75,43.42L210.38,43.97L209.6,44.71L209.63,44.96L209.14,45.18L208.84,45.09L208.56,46.29L208.04,46.71L207.68,47.42L208,47.99L208.11,48.38L208.99,48.7L208.81,48.94L207.62,49L207.19,49.31L206.36,49.85L206.04,49.38L206.06,49.18L205.45,49.15L204.92,49.05L203.72,49.31L204.41,49.88L203.9,50.04L203.34,50.04L202.82,49.52L202.63,49.74L202.85,50.34L203.35,50.81L202.97,51.03L203.53,51.49L204.02,51.78L204.04,52.35L203.11,52.08L203.41,52.59L202.78,52.7L203.15,53.58L202.49,53.59L201.67,53.15L201.3,52.36L201.12,51.69L200.73,51.23L200.22,50.66L200.15,50.37L199.98,50.31L199.96,50.09L199.41,49.75L199.32,49.27L199.4,48.59L199.54,48.28L199.37,48.12L199.16,48.04L198.88,47.72L198.45,47.52L197.51,47.15L196.93,46.79L196.01,46.49L195.18,45.76L195.38,45.68L194.92,45.26L194.9,44.92L194.26,44.77L193.95,45.2L193.66,44.86L193.68,44.52L193.71,44.5L193.94,44.41L193.14,44.26L192.33,44.62L192.38,45.11L192.26,45.4L192.59,45.91L193.53,46.41L194.03,47.24L195.14,48.04L195.92,48.04L196.17,48.26L195.89,48.46L196.79,48.82L197.52,49.12L198.38,49.64L198.48,49.83L198.29,50.19L197.74,49.72L196.87,49.56L196.45,50.2L197.17,50.57L197.05,51.1L196.63,51.16L196.1,52.01L195.68,52.09L195.69,51.78L195.89,51.25L196.11,51.04L195.72,50.46L195.41,49.95L195,49.83L194.7,49.39L194.06,49.21L193.63,48.81L192.89,48.75L192.11,48.29L191.19,47.64L190.51,47.07L190.2,46.08L189.7,45.96L188.89,45.63L188.43,45.77L187.85,46.23L187.44,46.31L186.53,46.87L184.56,46.6L183.1,46.93L182.99,47.53L183.04,48.11L182.09,48.77L180.81,48.99L180.72,49.32L180.11,49.88L179.72,50.69L180.11,51.26L179.53,51.71L179.32,52.36L178.56,52.56L177.85,53.33L176.59,53.34L175.63,53.32L175,53.68L174.62,54.05L174.13,53.97L173.76,53.63L173.48,53.06L172.55,52.9L172.14,53.16L171.62,53.02L171.1,53.13L171.25,52.35L171.16,51.73L170.71,51.64L170.47,51.26L170.55,50.61L170.95,50.24L171.02,49.84L171.23,49.24L171.21,48.82L171.01,48.46L170.97,48.12L171.02,47.41L170.61,46.97L172.02,46.25L173.24,46.43L174.59,46.43L175.65,46.6L176.48,46.54L178.1,46.58L178.62,45.98L178.81,43.99L177.77,42.94L177.04,42.43L175.51,42.04L175.41,41.32L176.7,41.1L178.38,41.36L178.06,40.22L179.01,40.65L181.34,39.87L181.64,39.05L182.51,38.85L183.31,38.65L183.83,38.38L184.71,36.91L186.08,36.49L186.91,36.52L187.1,36.31L187.94,36.25L188.12,36.47L188.8,35.98L188.57,35.6L188.53,35.04L188.12,34.48L188.09,33.46L188.26,33.19L188.54,32.89L189.42,32.83L189.78,32.55L190.58,32.27L190.55,32.78L190.25,33.11L190.37,33.39L190.91,33.54L190.67,33.92L190.37,33.81L189.65,34.53L189.92,35.02L189.94,35.4L190.95,35.64L190.94,35.99L191.96,35.8L192.52,35.53L193.65,35.92L194.12,36.24L194.8,35.95L196.36,35.49L197.62,35.15L198.62,35.32L198.7,35.56L199.66,35.57L199.89,35.13L201.27,34.81L201.05,33.97L201.09,33.22L201.58,32.59L202.52,32.25L203.32,32.99L204.12,32.97L204.31,32.21L204.43,31.62L204.06,31.74L203.43,31.39L203.34,30.81L204.6,30.53L205.86,30.39L206.95,30.55L207.98,30.52L209.12,29.97L208.07,29.5L206.26,29.58L204.5,29.94L202.87,30.15L202.29,29.61L201.32,29.28L201.54,28.3L201.06,27.39L201.54,26.81L202.44,26.18L204.73,25.1L205.4,24.89L205.3,24.47L203.9,23.99L202.18,24.28L201.21,24.97L201.37,25.59L199.78,26.39L197.85,27.25L197.12,28.66L197.83,29.36L198.79,29.92L197.87,31.05L196.83,31.28L196.45,32.96L195.88,33.9L194.67,33.8L194.1,34.59L192.94,34.64L192.62,33.69L191.79,32.56L191.03,31.14L190.36,30.53L188.38,31.69L187.05,31.92L185.66,31.41L185.31,30.34L184.99,28.03L185.91,27.38L188.55,26.55L190.53,25.51L192.36,24.12L194.76,22.19L196.44,21.44L199.18,20.18L201.38,19.74L203.02,19.8L204.55,18.97L206.37,19.01L208.16,18.81L211.29,19.55L210,19.81L211.1,20.44L212.13,20.09L213.77,20.7L216.51,20.94L220.29,22.07L221.06,22.54L221.13,23.21L220.02,23.73L218.38,24L213.92,23.24L213.18,23.37L214.81,24.1L214.94,25.59L216.23,25.89L217.01,26.15L217.14,25.67L216.52,25.22L217.18,24.86L219.59,25.48L220.44,25.24L219.76,24.5L222.09,23.52L223.02,23.58L223.95,23.93L224.53,23.24L223.7,22.65L224.19,22.05L223.45,21.43L226.25,21.75L226.82,22.31L225.56,22.43L225.56,22.99L226.35,23.33L227.89,23.12L228.14,22.48L230.23,22L233.72,21.14L234.47,21.19L233.49,21.8L234.73,21.9L235.44,21.56L237.32,21.53L238.8,21.12L239.94,21.72L241.08,21.06L240.03,20.48L240.55,20.15L243.5,20.45L244.89,20.77L248.51,21.91L249.18,21.38L248.16,20.86L248.14,20.64L246.93,20.55L247.26,20.07L246.72,19.29L246.7,18.97L248.54,18.07L249.19,17.16L249.94,16.96L252.59,17.22L252.79,17.78L251.85,18.59L252.47,18.91L252.79,19.61L252.56,20.98L253.67,21.59L253.24,22.26L251.28,23.68L252.42,23.83L252.82,23.47L253.92,23.21L254.19,22.72L255.05,22.24L254.47,21.67L254.94,21.01L253.84,20.93L253.6,20.37L254.4,19.37L253.1,18.55L254.89,17.88L254.66,17.17L255.16,17.14L255.68,17.7L255.29,18.66L256.36,18.85L255.9,18.13L257.58,17.73L259.65,17.68L261.5,18.25L260.61,17.42L260.51,16.35L262.25,16.15L264.66,16.19L266.82,16.06L266.01,15.54L267.17,14.88L268.31,14.86L270.26,14.36L272.9,14.23L273.24,13.95L275.86,13.86L276.68,14.08L278.92,13.55L280.76,13.57L281.04,13.14L281.99,12.71L284.35,12.3L286.07,12.63L284.71,12.87L286.97,13.03L287.24,13.52L288.15,13.28L291.08,13.29L293.33,13.78L294.13,14.15L293.89,14.67L292.78,14.97L290.15,15.52L289.4,15.82L290.64,15.96L292.12,16.21L293.02,16.02L293.53,16.66L293.97,16.41L295.57,16.25L298.78,16.41L299.02,16.88L303.2,17.03L303.26,16.26L305.38,16.44L306.98,16.43L308.59,16.96L309.05,17.6L308.46,18.02L309.71,18.81L311.29,19.21L312.25,18.16L313.86,18.61L315.56,18.34L317.5,18.65L318.23,18.37L319.87,18.51L319.15,17.58L320.47,17.15L329.5,17.8L330.35,18.39L332.97,19.16L337.01,18.97L339,19.13L339.83,19.55L339.71,20.28L340.94,20.56L342.28,20.36L344.05,20.33L345.94,20.53L347.84,20.42L349.58,21.31L350.82,20.99L350.01,20.35L350.45,19.9L353.64,20.18L355.72,20.12L358.6,20.6L360,21.04L360,25.02ZM0,21.04L0,21.04L0,21.04L2.45,21.8L5.07,22.79L4.99,23.42L5.66,23.66L5.43,22.94L8.14,23.09L10.1,24.02L9.11,24.46L7.47,24.56L7.44,25.54L7.05,25.75L6.11,25.72L5.35,25.37L4.02,25.08L3.79,24.64L2.78,24.48L1.64,24.61L1.1,24.26L1.31,23.89L0.12,24.13L0.57,24.6L0,25.02L0,25.02L0,21.04ZM84.35,20.89L83.73,21.24L82.38,20.94L81.57,21.05L80.2,20.6L81.08,20.29L81.78,19.86L82.84,20.14L83.44,20.32L83.74,20.51ZM360,18.82L360,19.17L358.9,19.22L358.73,18.9L360,18.48L360,18.82ZM0,18.48L0,18.48L0,18.48L0,18.82L0,18.48ZM0,18.48L0.13,18.44L0.98,18.44L2.42,18.73L2.34,18.87L1.31,19.11L0,19.17ZM89.45,20.5L89.45,21.53L90.79,20.74L91.98,21.38L91.68,22.13L92.65,22.8L93.69,22.08L94.42,21.22L94.48,20.12L95.9,20.19L97.38,20.34L98.72,20.84L98.78,21.33L98.04,21.87L98.74,22.4L98.61,22.89L96.65,23.59L95.26,23.74L94.23,23.44L93.93,23.94L92.97,24.79L92.68,25.22L91.52,25.9L90.09,25.97L89.3,26.39L89.23,27.04L88.07,27.16L86.84,27.98L85.76,29.1L85.37,29.89L85.32,31.05L86.79,31.22L87.24,32.15L87.7,32.91L89.1,32.71L90.96,33.15L91.96,33.53L92.68,34L93.93,34.28L94.99,34.7L96.64,34.75L97.73,34.85L97.56,35.72L97.87,36.72L98.6,37.84L100.09,38.79L100.86,38.47L101.4,37.44L100.88,35.86L100.17,35.33L101.77,34.86L102.9,34.16L103.46,33.47L103.38,32.8L102.7,31.95L101.48,31.19L102.66,30.15L102.23,29.24L101.89,27.68L102.59,27.45L104.3,27.72L105.33,27.82L106.16,27.56L107.09,27.89L108.32,28.47L108.63,28.86L110.41,28.94L110.38,29.78L110.71,31.04L111.63,31.2L112.35,31.79L113.8,31.23L114.75,30.13L115.42,29.66L116.19,30.56L117.5,31.83L118.6,33.03L118.2,33.66L119.53,34.22L120.43,34.8L122.02,35.05L122.67,35.37L123.06,36.22L123.84,36.35L124.24,36.73L124.32,37.85L123.59,38.23L122.87,38.58L121.22,38.93L119.97,39.76L118.28,39.92L116.14,39.71L114.64,39.7L113.6,39.77L112.76,40.49L111.49,40.93L110.05,42.26L108.89,43.18L109.74,43.01L111.35,41.7L113.45,40.87L114.95,40.77L115.83,41.26L114.88,41.93L115.2,43.01L115.53,43.76L116.83,44.26L118.48,44.12L119.48,42.99L119.55,43.72L120.2,44.08L118.96,44.74L116.75,45.33L115.75,45.73L114.64,46.45L113.88,46.38L113.84,45.53L115.58,44.71L113.97,44.74L112.86,44.86L113.03,45.19L111.97,45.67L110.94,46.02L109.88,46.32L109.31,46.97L109.19,47.14L109.17,47.67L109.51,48.19L109.92,48.22L109.82,47.85L110.11,48.08L110.04,48.36L109.36,48.52L108.88,48.5L108.14,48.68L107.71,48.73L107.12,48.78L106.29,49.07L107.76,48.88L108.06,49.07L106.65,49.37L106.02,49.37L106.05,49.25L105.74,49.53L106.04,49.57L105.82,50.29L105.09,51.06L105.02,50.8L104.8,50.75L104.47,50.5L104.68,51.04L104.92,51.22L104.94,51.6L104.62,51.98L104.06,52.78L103.97,52.74L104.28,52.06L103.77,51.68L103.65,50.85L103.46,51.28L103.67,51.92L103.04,51.77L103.7,52.08L103.74,53.03L104.03,53.1L104.13,53.45L104.27,54.45L103.64,55.19L102.6,55.49L101.95,56.07L101.45,56.14L100.94,56.51L100.8,56.84L99.7,57.49L99.13,57.97L98.66,58.56L98.51,59.27L98.69,59.96L99.02,60.82L99.47,61.53L99.47,61.96L99.94,63.12L99.91,63.79L99.87,64.18L99.62,64.79L99.32,64.92L98.83,64.8L98.67,64.36L98.29,64.13L97.76,63.27L97.29,62.51L97.14,62.11L97.35,61.45L97.07,60.9L96.29,60.06L95.9,59.91L94.89,60.36L94.71,60.31L94.23,59.85L93.6,59.6L92.47,59.73L91.58,59.61L90.82,59.68L90.39,59.82L90.59,60.11L90.57,60.51L90.78,60.71L90.59,60.84L90.22,60.69L89.85,60.88L89.12,60.85L88.37,60.32L87.5,60.45L86.78,60.22L86.15,60.29L85.31,60.52L84.4,61.26L83.41,61.69L82.86,62.17L82.63,62.62L82.62,63.31L82.67,63.79L82.86,64.13L82.86,64.13L82.86,64.13L82.47,65.01L82.3,65.73L82.22,67.07L82.13,67.56L82.3,68.1L82.61,68.59L82.81,69.36L83.47,70.11L83.71,70.68L84.1,71.17L85.16,71.44L85.57,71.86L86.45,71.58L87.21,71.47L87.96,71.29L88.59,71.12L89.23,70.72L89.47,70.13L89.55,69.29L89.72,69L90.4,68.74L91.46,68.51L92.34,68.54L92.95,68.46L93.19,68.67L93.15,69.15L92.62,69.74L92.38,70.35L92.56,70.53L92.41,70.96L92.16,71.74L91.91,71.48L91.7,71.5L91.7,71.65L91.89,71.65L91.88,71.92L91.71,72.36L91.8,72.51L91.7,72.87L91.76,72.96L91.65,73.47L91.45,73.73L91.27,73.77L91.07,74.11L91.39,74.29L91.48,74.15L91.78,74.27L91.88,74.31L92.1,74.14L92.38,74.12L92.48,74.2L92.63,74.15L93.1,74.24L93.56,74.22L93.88,74.11L94,73.99L94.32,74.05L94.55,74.11L94.82,74.09L95.02,74L95.47,74.14L95.63,74.17L95.94,74.35L96.23,74.58L96.59,74.73L96.85,75L96.77,75.1L96.71,75.32L96.82,75.69L96.59,76.03L96.48,76.43L96.45,76.87L96.5,77.13L96.53,77.58L96.37,77.68L96.28,78.11L96.35,78.37L96.15,78.63L96.19,78.9L96.34,79.06L96.6,79.6L96.98,80.01L97.45,80.43L97.81,80.79L97.79,81L98.19,81.05L98.28,80.97L98.56,81.21L99.05,81.14L99.48,80.89L100.08,80.69L100.43,80.39L100.98,80.45L100.94,80.54L101.5,80.58L101.95,80.75L102.27,81.05L102.65,81.33L103.16,81.36L103.92,80.66L104.33,80.56L104.34,80.23L104.52,79.38L105.09,78.92L105.72,78.9L105.8,78.69L106.59,78.77L107.37,78.27L107.76,78.04L108.25,77.56L108.6,77.62L108.86,77.89L108.67,78.22L108.64,78.46L108.05,78.58L108.38,79.03L108.37,79.55L107.93,80.13L108.3,80.93L108.74,80.86L108.96,80.14L108.65,79.79L108.6,79.03L109.84,78.62L109.71,78.15L110.06,77.84L110.42,78.54L111.12,78.56L111.77,79.11L111.81,79.44L112.7,79.45L113.77,79.35L114.34,79.8L115.11,79.92L115.67,79.61L115.68,79.36L116.92,79.3L118.12,79.28L117.27,79.58L117.61,80.05L118.41,80.13L119.17,80.62L119.33,81.42L119.85,81.4L120.24,81.63L120.9,82L121.52,82.65L121.54,83.17L121.92,83.19L122.46,83.68L122.85,84.03L124.05,84.23L124.16,84.05L124.97,83.97L126.04,84.24L126.38,84.35L127.12,84.59L128.18,85.43L128.34,85.84L128.68,85.8L128.93,86.35L129.49,88.1L130.03,88.26L130.05,88.95L129.3,89.78L129.61,90.08L131.38,90.23L131.42,91.24L132.18,90.58L133.43,90.94L135.09,91.55L135.58,92.14L135.42,92.69L136.58,92.38L138.53,92.91L140.02,92.87L141.5,93.7L142.78,94.82L143.55,95.11L144.4,95.15L144.76,95.46L145.1,96.74L145.27,97.34L144.87,99L144.36,99.65L142.95,101.04L142.32,102.17L141.58,103.04L141.33,103.06L141.05,103.79L141.12,105.67L140.84,107.21L140.73,107.87L140.42,108.26L140.24,109.6L139.22,110.9L139.05,111.94L138.24,112.37L138.01,112.97L136.92,112.97L135.35,113.35L134.65,113.8L133.53,114.09L132.35,114.89L131.51,115.88L131.36,116.62L131.52,117.18L131.34,118.19L131.11,118.67L130.41,119.22L129.3,120.99L128.42,121.78L127.74,122.25L127.29,123.2L126.63,123.77L126.19,124.4L125.07,124.95L124.33,124.75L123.78,124.86L122.86,124.43L122.18,124.46L121.57,123.91L121.5,124.43L122.78,125.29L122.64,125.98L123.26,126.41L123.21,126.9L122.25,128.18L120.77,128.72L118.76,128.93L117.66,128.83L117.88,129.42L117.67,130.17L117.85,130.68L117.25,131.03L116.23,131.17L115.27,130.8L114.88,131.06L115.02,132.06L115.7,132.36L116.25,132.04L116.54,132.56L115.62,132.87L114.82,133.49L114.67,134.5L114.43,135.04L113.49,135.04L112.71,135.55L112.42,136.3L113.4,137.03L114.36,137.24L114.01,138.13L112.83,138.7L112.18,139.87L111.27,140.27L110.86,140.73L111.18,141.77L111.85,142.35L111.43,142.3L110.54,142.29L110.06,142.54L109.16,142.9L108.99,143.83L108.57,143.86L107.44,143.53L106.3,142.83L105.05,142.26L104.74,141.63L105.02,141.04L104.52,140.38L104.39,138.67L104.82,137.71L105.87,136.94L104.35,136.65L105.31,135.76L105.65,134.1L106.76,134.45L107.28,132.38L106.61,132.12L106.3,133.37L105.67,133.23L105.98,131.8L106.32,129.94L106.78,129.26L106.5,128.28L106.41,127.16L106.83,127.12L107.45,125.51L108.14,123.91L108.56,122.42L108.33,120.92L108.63,120.1L108.51,118.86L109.1,117.64L109.28,115.71L109.6,113.63L109.91,111.39L109.84,109.76L109.63,108.35L108.62,107.77L108.54,107.36L106.55,106.36L104.76,105.27L103.99,104.65L103.58,103.82L103.74,103.53L102.89,102.22L101.91,100.38L100.96,98.39L100.55,97.93L100.24,97.19L99.46,96.54L98.75,96.14L99.07,95.69L98.59,94.74L98.9,94.04L99.7,93.4L100.23,92.66L100.01,92.22L99.63,92.69L99.03,92.25L99.23,91.96L99.07,91.06L99.41,90.91L99.6,90.28L99.98,89.64L99.91,89.23L100.46,89.02L101.14,88.62L101.01,88.31L101.38,88.23L101.34,87.73L101.57,87.37L102.07,87.3L102.49,86.68L102.87,86.15L102.5,85.91L102.69,85.33L102.47,84.42L102.68,84.16L102.52,83.31L102.12,82.78L101.78,82.49L101.57,81.95L101.82,81.68L101.56,81.61L101.38,81.28L100.88,81L100.44,81.07L100.24,81.41L99.84,81.67L99.62,81.7L99.52,81.91L99.99,82.45L99.72,82.58L99.58,82.73L99.11,82.78L98.94,82.18L98.81,82.35L98.48,82.29L98.28,81.89L97.87,81.82L97.61,81.71L97.18,81.71L97.15,81.93L97.04,81.78L96.49,81.55L96.29,81.34L96.41,81.17L96.37,80.95L96.09,80.71L95.7,80.51L95.35,80.38L95.29,80.09L95.02,79.91L95.09,80.2L94.89,80.44L94.66,80.17L94.34,80.07L94.2,79.86L94.21,79.56L94.34,79.24L94.06,79.1L94.29,78.91L93.94,78.6L93.47,78.19L93.26,77.86L92.83,77.54L92.33,77.09L92.44,76.93L92.61,77.09L92.68,77.02L92.51,76.7L92.21,76.61L92.1,76.85L91.52,76.84L91.16,76.74L90.74,76.54L90.19,76.48L89.9,76.26L89.39,76.09L88.77,76.07L88.31,75.87L87.77,75.46L86.64,74.38L86.12,74.06L85.31,73.8L84.75,73.87L83.95,74.25L83.44,74.35L82.74,74.08L81.99,73.89L81.05,73.43L80.3,73.29L79.17,72.83L78.33,72.35L78.08,72.08L77.52,72.02L76.5,71.71L76.08,71.25L75.01,70.68L74.51,70.05L74.27,69.57L74.6,69.47L74.5,69.18L74.73,68.92L74.73,68.58L74.4,68.13L74.31,67.73L73.97,67.23L73.09,66.23L72.08,65.45L71.6,64.83L70.74,64.42L70.56,64.17L70.71,63.56L70.2,63.32L69.61,62.84L69.36,62.14L68.82,62.06L68.24,61.53L67.77,61.04L67.73,60.73L67.19,59.98L66.83,59.21L66.85,58.83L66.13,58.43L65.79,58.48L65.22,58.2L65.06,58.61L65.23,59.09L65.33,59.84L65.67,60.25L66.41,60.94L66.58,61.17L66.73,61.24L66.86,61.59L67.04,61.57L67.24,62.22L67.54,62.47L67.76,62.83L68.38,63.34L68.71,64.27L69.01,64.71L69.29,65.17L69.34,65.7L69.83,65.73L70.23,66.19L70.59,66.64L70.57,66.81L70.15,67.18L69.97,67.18L69.7,66.57L69.05,66L68.33,65.51L67.82,65.26L67.85,64.53L67.7,63.99L67.22,63.68L66.54,63.23L66.4,63.36L66.15,63.1L65.54,62.86L64.94,62.28L65.02,62.2L65.43,62.26L65.8,61.88L65.84,61.43L65.07,60.72L64.48,60.44L64.11,59.82L63.74,59.16L63.28,58.36L62.87,57.47L62.71,56.95L62.06,56.38L61.59,56.26L61.48,55.97L60.92,55.92L60.56,55.65L59.63,55.55L59.38,55.39L59.26,54.84L58.28,53.84L57.45,52.45L57.49,52.22L57.05,51.89L56.27,51.05L56.14,50.23L55.6,49.69L55.82,48.86L55.79,48L55.47,47.23L55.86,46.29L56.1,44.48L55.92,43.14L55.6,42.28L55.31,41.82L55.43,41.62L56.88,41.96L57.41,42.9L57.66,42.64L57.5,41.82L57.16,41L57.02,41L55.09,40.01L54.37,39.58L52.56,39.17L52.01,38.28L52.15,37.67L50.87,37.24L50.7,36.44L49.49,35.71L49.46,35.2L48.91,34.82L48.03,34.5L47.75,33.63L46.46,32.82L45.92,31.88L44.96,31.81L43.37,31.79L42.2,31.5L40.13,30.46L39.18,30.27L37.43,29.92L36.04,30L34.07,29.54L32.89,29.11L31.77,29.33L31.98,30.02L31.43,30.09L30.27,30.29L29.39,30.63L28.29,30.84L28.14,30.26L28.59,29.27L29.65,28.97L29.38,28.72L28.11,29.27L27.42,29.94L25.98,30.65L26.71,31.14L25.77,31.85L24.69,32.27L23.69,32.58L23.44,33.02L21.88,33.54L21.57,34.01L20.4,34.43L19.71,34.36L18.78,34.64L17.76,34.98L16.93,35.31L15.21,35.6L15.06,35.43L16.15,34.96L17.13,34.65L18.19,34.1L19.44,33.99L19.93,33.58L21.32,32.98L21.54,32.78L22.28,32.43L22.45,31.67L22.96,31.08L21.81,31.38L21.48,31.21L20.94,31.58L20.29,31.07L20.02,31.43L19.65,30.93L18.64,31.33L18.03,31.33L17.95,30.73L18.13,30.37L17.48,30.01L16.18,30.2L15.34,29.73L14.65,29.49L14.65,28.93L13.88,28.5L14.27,27.92L15.08,27.37L15.44,26.85L16.25,26.78L16.93,26.94L17.74,26.46L18.46,26.54L19.23,26.23L19.04,25.78L18.48,25.6L19.22,25.21L18.61,25.22L17.55,25.44L17.24,25.66L16.45,25.44L15.04,25.55L13.58,25.31L13.15,24.91L11.89,24.33L13.29,23.91L15.53,23.42L16.35,23.42L16.21,23.92L18.32,23.88L17.51,23.27L16.28,22.88L15.57,22.38L14.61,21.96L13.24,21.64L13.8,21.12L15.57,21.09L16.83,20.63L17.07,20.14L18.09,19.67L19.07,19.55L20.96,19.11L21.88,19.18L23.42,18.64L24.93,18.85L25.66,19.3L26.1,19.11L27.79,19.17L27.73,19.4L29.26,19.57L30.28,19.47L32.39,19.79L34.31,19.88L35.08,20.01L36.41,19.85L37.93,20.15L39.01,20.29L40.88,20.53L42.46,21.01L43.5,21.1L44.37,20.68L45.58,20.37L47.07,20.49L48.57,20.06L50.21,19.81L50.89,20.22L51.64,19.99L51.86,19.52L52.55,19.62L54.25,20.52L55.57,19.84L55.71,20.6L56.94,20.44L57.32,20.14L58.53,20.2L60.06,20.62L62.4,20.99L63.77,21.16L64.75,21.09L66.1,21.6L64.7,22.1L66.5,22.31L69.2,22.19L70.05,22.02L71.12,22.62L72.21,22.11L71.19,21.69L71.83,21.35L73.05,21.3L73.85,21.2L74.66,21.44L75.66,21.98L76.78,21.9L78.55,22.35L80.1,22.19L81.56,22.22L81.44,21.6L82.33,21.42L83.88,21.76L83.87,22.71L84.51,21.91L85.31,21.94L85.77,20.93L84.69,20.32L83.53,19.91L83.61,18.81L84.79,18.08L86.11,18.24L87.12,18.68L88.48,19.81L87.59,20.3ZM65.83,16.88L65.33,17.35L67.56,17.05L68.95,17.55L70.08,17.04L70.99,17.37L71.81,18.35L72.31,17.94L71.6,16.91L72.48,16.76L73.48,16.92L74.6,17.33L75.23,18.3L75.54,19.01L77.21,19.5L79.02,19.97L78.91,20.41L77.27,20.5L77.91,20.88L77.57,21.25L75.76,21.09L74.04,20.82L72.88,20.88L71,21.22L68.03,21.39L66.69,21.46L66.14,20.99L64.78,20.72L63.89,20.83L62.66,20.04L63.32,19.93L64.87,19.76L66.28,19.81L67.58,19.63L65.65,19.4L63.51,19.48L62.09,19.46L61.57,19.09L63.89,18.69L62.35,18.71L60.6,18.44L61.44,17.69L62.13,17.29L64.81,16.69ZM75.5,16.58L74.62,17.24L73.06,16.54L73.4,16.4L74.74,16.36ZM103.66,16.9L103.75,17.17L102.68,17.14L101.61,17.12L100.51,17.26L100.23,17.2L99.12,16.67L99.17,16.31L99.65,16.24L101.94,16.35ZM93.44,16.84L94.23,17.47L95.15,16.66L97.68,16.25L99.4,17.28L99.25,17.94L101.23,17.65L102.18,17.25L104.39,17.76L105.77,18.23L105.9,18.67L107.76,18.44L108.8,19.08L111.21,19.48L112.08,19.88L113.03,20.81L111.19,21.28L113.55,21.93L115.14,22.15L116.58,23.07L118.15,23.14L117.84,23.84L116.08,25L114.85,24.57L113.28,23.61L111.99,23.74L111.86,24.31L112.91,24.89L114.27,25.35L114.68,25.62L115.33,26.61L114.99,27.33L113.73,27.05L111.22,26.25L112.63,27.12L113.67,27.72L113.83,28.07L111.12,27.67L108.98,27.09L107.76,26.6L108.11,26.32L106.62,25.81L105.16,25.32L105.18,25.61L102.29,25.77L101.45,25.43L102.1,24.69L103.98,24.67L106.04,24.54L105.71,24.19L106.05,23.69L107.35,22.72L107.07,22.27L106.69,21.93L105.16,21.45L103.13,21.11L103.77,20.85L102.71,20.23L101.83,20.17L101.04,19.83L100.51,20.13L98.69,20.26L95.06,20.03L92.94,19.74L91.32,19.59L90.49,19.24L91.53,18.78L90.11,18.78L89.8,17.76L90.56,16.87L91.59,16.46L94.17,16.2ZM79.64,16.16L80.84,16.37L82.62,16.24L82.88,16.53L81.95,17.01L83.46,17.44L83.28,18.34L81.64,18.73L80.68,18.64L79.99,18.26L77.5,17.49L77.52,17.17L79.56,17.29L78.46,16.64ZM323.6,16.79L322.09,16.79L320.04,16.68L319.86,16.63L320.81,16.23L322.06,16.14L323.48,16.53ZM86.8,17.23L85.73,17.98L84.59,17.94L83.97,17.06L83.98,16.56L84.5,16.14L85.5,15.87L87.58,15.9L89.49,16.14L88,17.03ZM59.54,18.6L56.91,19.1L56.38,18.66L54.07,18.13L54.41,17.81L55.19,16.98L56.06,16.32L55.08,15.71L58.46,15.55L59.89,15.76L62.44,15.81L63.41,16.1L64.49,16.53L63.23,16.78L60.78,17.48L59.54,18.18ZM330.73,14.92L329.58,15.31L327.98,15.22L326.12,14.83L326.36,14.5L328.22,14.65ZM86.39,15.02L85.84,15.41L84.39,15.33L83.18,15.07L83.71,14.62L85.15,14.35L86.02,14.7ZM325.09,14.44L324.3,15.18L320.62,15.15L318.96,15.39L316.98,14.74L317.51,14.05L318.83,13.86L321.47,13.91ZM81.5,13.28L82.26,13.74L82.3,14.26L81.84,15L80.19,15.1L79.12,14.94L79.14,14.36L77.5,14.44L77.43,13.66L78.51,13.69L80.02,13.35L81.42,13.41ZM71.79,13.8L72.18,14.15L73.07,13.99L74.12,14.03L74.29,14.52L73.69,15L70.3,15.15L67.78,15.58L66.26,15.61L66.13,15.28L68.21,14.84L63.69,14.96L62.29,14.78L63.65,13.8L64.6,13.52L67.41,13.86L69.19,14.45L70.93,14.53L69.5,13.57L70.42,13.21L71.45,13.32ZM237.53,19.28L236.94,19.37L233.68,19.24L233.41,18.79L231.6,18.53L231.46,17.98L232.48,17.77L232.44,17.22L234.43,16.37L233.51,16.25L235.9,15.37L235.63,14.92L237.87,14.39L241.17,13.75L244.5,13.56L246.21,13.19L248.16,13.06L248.85,13.46L248.18,13.77L244.64,14.26L241.58,14.74L238.48,15.69L236.99,16.67L235.42,17.63L235.62,18.46ZM85.32,12.9L86.43,13.22L88.4,13.22L89.26,13.55L89.03,13.93L90.18,14.15L90.81,14.39L92.16,14.43L93.62,14.52L95.21,14.3L97.25,14.22L98.87,14.29L99.94,14.66L100.17,15.08L99.54,15.34L98.05,15.56L96.77,15.44L93.9,15.59L91.85,15.61L90.23,15.48L87.58,15.16L87.23,14.61L87.11,14.12L86.11,13.68L84.04,13.56L82.88,13.25L83.25,12.84ZM63.8,12.35L63.66,13.12L62.89,13.47L61.96,13.52L60.1,13.95L58.5,14.1L57.14,13.88L58.84,13.14L60.89,12.49L62.43,12.5ZM86.16,12.48L85.71,12.51L83.83,12.44L83.56,12.17L85.58,12.18L86.28,12.37ZM69.81,12.3L67.95,12.59L66.47,12.27L67.27,11.95L68.74,11.85L70.15,12ZM204.72,12.15L202.49,12.55L200.73,12.32L201.41,12.07L200.81,11.75L202.88,11.54L203.28,11.92ZM70.34,11.4L69.12,11.59L67.46,11.59L67.48,11.45L68.5,11.15L69.04,11.2ZM84.17,11.94L82.69,12.15L81.88,11.92L81.45,11.54L81.37,11.13L82.66,11.17L83.25,11.23L84.44,11.58ZM79.94,11.67L80.33,12.09L78.7,11.98L77.05,11.66L74.82,11.62L75.79,11.32L74.58,11.08L74.51,10.7L76.47,10.84L79.18,11.2ZM285.08,11.69L279.44,12.08L281.26,10.77L282.09,10.65L282.84,10.72L285.37,11.29ZM198.25,10.3L201.54,11.04L199.03,11.44L198.47,12.17L197.6,12.36L197.12,13.19L195.91,13.23L193.76,12.62L194.67,12.26L193.17,11.98L191.22,11.13L190.45,10.35L193.17,9.99L193.72,10.34L195.14,10.33L195.52,9.98L196.99,9.95ZM205.45,9.59L207.41,9.94L205.93,10.48L203.02,10.6L200.08,10.43L199.9,10.16L198.46,10.14L197.37,9.68L200.46,9.4L201.91,9.64L202.92,9.34ZM231.14,9.45L229.79,9.58L228.89,9.66L228.75,9.82L227.59,9.99L226.5,9.75L227.07,9.44L224.85,9.41L226.8,9.23L228.32,9.22L228.52,9.49L229.1,9.25L230.04,9.08L231.52,9.3ZM279.94,11.12L277.76,11.24L274.97,10.96L273.31,10.57L272.54,9.86L271.18,9.66L273.78,8.97L275.94,8.75L277.88,9.25L280.19,10.22ZM92.98,10.34L94.18,10.66L92.81,10.96L90.97,11.71L89.19,11.78L87.12,11.66L86.05,11.25L86.06,10.89L86.85,10.62L85.03,10.63L83.92,10.3L83.29,9.84L83.99,9.4L84.68,9.09L85.7,9.02L85.26,8.79L87.59,8.74L88.87,9.28L90.55,9.49L92.19,9.68ZM111.5,6.89L114.17,6.97L116.32,7.1L118.15,7.37L118.11,7.64L115.67,8.07L113.25,8.27L112.34,8.5L114.52,8.49L112.16,9.1L110.53,9.38L108.82,10.2L106.76,10.37L106.12,10.57L103.09,10.68L104.47,10.8L103.78,10.98L104.61,11.47L103.66,11.82L102.11,12.1L101.64,12.49L100.24,12.79L100.38,13.02L102.09,12.98L102.11,13.22L99.44,13.82L96.83,13.55L93.89,13.7L92.4,13.58L90.51,13.53L90.38,13.05L92.23,12.82L91.74,12.1L92.35,12.03L95.02,12.46L93.66,11.82L92.04,11.63L92.85,11.24L94.62,11L94.9,10.65L93.49,10.26L93.07,9.75L95.8,9.79L96.59,9.9L98.15,9.54L95.9,9.42L92.4,9.48L90.63,9.14L89.8,8.74L88.63,8.45L88.41,8.1L89.9,7.92L91.07,7.88L93.03,7.72L94.5,7.35L95.74,7.4L96.82,7.68L97.58,7.14L98.9,6.98L100.69,6.87L103.75,6.83L104.28,6.94L107.17,6.77L109.33,6.83ZM152.9,6.48L159.15,7.27L157.31,7.66L153.48,7.7L148.1,7.8L148.6,7.98L152.14,7.87L155.15,8.21L157.1,7.91L157.93,8.27L156.83,8.85L159.38,8.48L164.23,8.09L167.23,8.28L167.79,8.71L163.72,9.42L163.15,9.65L159.95,9.82L162.27,9.87L161.1,10.6L160.3,11.25L160.33,12.36L161.53,13.02L159.96,13.06L158.32,13.37L160.17,13.9L160.4,14.75L159.33,14.84L160.63,15.7L158.41,15.78L159.56,16.18L159.24,16.54L157.83,16.69L156.43,16.69L157.69,17.37L157.7,17.82L155.72,17.4L155.21,17.67L156.56,17.92L157.87,18.53L158.25,19.34L156.46,19.53L155.69,19.14L154.46,18.57L154.8,19.25L153.64,19.77L156.27,19.82L157.65,19.87L154.97,20.74L152.25,21.53L149.33,21.88L148.22,21.88L147.19,22.26L145.8,23.32L143.65,24.02L142.96,24.06L141.63,24.31L140.19,24.54L139.33,25.16L139.32,25.86L138.81,26.52L137.18,27.32L137.58,28.1L137.13,28.93L136.62,29.9L135.21,29.96L133.74,29.15L131.74,29.14L130.77,28.59L130.1,27.62L128.37,26.37L127.86,25.72L127.72,24.82L126.34,23.9L126.7,23.16L126.03,22.81L127.02,21.64L128.52,21.27L128.92,20.85L129.13,20.07L127.98,20.43L127.44,20.57L126.54,20.72L125.32,20.39L125.25,19.71L125.64,19.18L126.57,19.16L128.61,19.43L126.89,18.8L125.99,18.45L125,18.59L124.17,18.34L125.28,17.41L124.67,17.04L123.88,16.35L122.67,15.29L121.4,14.9L121.41,14.48L118.73,13.9L116.61,13.82L113.93,13.86L111.5,13.94L110.33,13.62L108.6,12.99L111.22,12.68L113.24,12.62L108.96,12.36L106.7,11.96L106.84,11.57L110.63,11.09L114.29,10.6L114.68,10.24L111.98,9.88L112.85,9.48L116.31,8.79L117.76,8.68L117.35,8.23L119.72,7.97L122.79,7.81L125.86,7.8L126.96,8.11L129.61,7.56L132,7.94L133.4,8.01L135.48,8.34L133.1,7.8L133.24,7.37L136.59,6.77L140.1,6.82L141.38,6.45L144.91,6.35Z";
+const JAPAN = "M323.09,43L323.179,43.157L323.218,43.205L323.319,43.193L323.384,43.195L323.449,43.209L323.485,43.249L323.539,43.424L323.578,43.594L323.582,43.639L323.51,43.77L323.492,43.825L323.481,43.884L323.463,43.931L323.431,43.971L323.42,43.778L323.37,43.641L323.352,43.523L323.283,43.441L323.049,43.407L322.83,43.395L322.797,43.379L322.747,43.329L322.693,43.289L322.635,43.284L322.578,43.299L322.48,43.356L322.405,43.445L322.351,43.54L322.304,43.643L322.207,43.912L322.149,44L322.077,44.084L322.016,44.039L321.962,43.987L321.93,43.912L321.915,43.829L321.829,43.549L321.865,43.306L321.998,43L323.09,43ZM323.823,45.882L323.949,45.888L324.007,45.884L324.1,45.898L324.482,46.051L324.597,46.07L324.716,46.072L324.799,46.059L324.871,46.018L325.101,45.834L325.342,45.665L325.371,45.672L325.371,45.719L325.353,45.769L325.245,45.924L325.126,46.131L325.101,46.235L325.141,46.337L325.213,46.422L325.274,46.537L325.342,46.698L325.436,46.717L325.486,46.721L325.584,46.672L325.674,46.611L325.753,46.604L325.832,46.615L325.724,46.657L325.623,46.709L325.537,46.808L325.504,46.825L325.404,46.82L325.346,46.823L325.231,46.865L325.126,46.912L325.029,46.969L324.921,46.999L324.806,47.006L324.63,47.052L324.514,47.056L324.302,47.016L324.198,47.026L323.971,47.118L323.762,47.252L323.582,47.401L323.431,47.582L323.37,47.676L323.334,47.78L323.326,47.849L323.312,47.915L323.28,47.962L323.236,48L323.11,47.978L322.905,47.882L322.509,47.742L322.088,47.528L321.85,47.42L321.408,47.453L320.986,47.658L320.947,47.641L320.788,47.5L320.709,47.445L320.616,47.429L320.547,47.431L320.479,47.441L320.385,47.512L320.349,47.565L320.324,47.624L320.317,47.665L320.328,47.707L320.418,47.799L320.529,47.868L320.576,47.882L320.684,47.877L320.734,47.884L320.911,48.023L321.109,48.151L321.152,48.195L321.08,48.24L321.001,48.262L320.907,48.257L320.817,48.24L320.659,48.184L320.594,48.231L320.49,48.328L320.432,48.433L320.385,48.481L320.27,48.544L320.148,48.577L320.086,48.566L320.036,48.526L320.011,48.479L319.996,48.424L320.022,48.304L320.083,48.196L320.108,48.087L320.058,47.933L320.025,47.901L319.896,47.809L319.834,47.722L319.82,47.613L319.827,47.552L319.86,47.419L319.892,47.351L319.95,47.328L320.014,47.315L320.115,47.268L320.223,47.205L320.328,47.134L320.432,47.045L320.486,46.95L320.396,46.832L320.378,46.762L320.392,46.697L320.486,46.662L320.583,46.688L320.781,46.785L320.821,46.794L320.954,46.799L321.138,46.82L321.246,46.815L321.296,46.801L321.375,46.721L321.411,46.618L321.397,46.488L321.397,46.358L321.447,46.252L321.602,46.08L321.645,45.981L321.66,45.736L321.717,45.629L321.76,45.518L321.782,45.283L321.721,45.059L321.656,44.948L321.584,44.844L321.595,44.743L321.652,44.651L321.652,44.624L321.667,44.599L321.778,44.58L321.829,44.561L321.879,44.516L321.937,44.49L321.98,44.516L322.016,44.561L322.171,44.674L322.416,44.875L322.704,45.181L322.884,45.33L323.074,45.466L323.287,45.603L323.514,45.723L323.654,45.778L323.758,45.868ZM321.228,48.627L321.267,48.646L321.454,48.596L321.418,48.748L321.4,48.903L321.415,49.16L321.429,49.276L321.462,49.389L321.541,49.469L321.645,49.526L321.796,49.708L321.879,49.932L321.937,50.042L321.976,50.156L321.991,50.208L321.991,50.261L321.98,50.332L321.994,50.389L321.976,50.571L321.908,50.781L321.901,50.889L321.843,50.91L321.807,50.96L321.775,50.983L321.742,51L321.692,51.005L321.66,51.024L321.645,51.082L321.624,51.135L321.58,51.184L321.548,51.238L321.519,51.368L321.508,51.502L321.469,51.596L321.368,51.62L321.253,51.618L321.109,51.661L321.076,51.688L320.961,51.851L320.929,51.948L320.929,52.05L320.961,52.177L321.004,52.302L321.037,52.533L321.001,52.885L320.968,52.998L320.896,53.075L320.839,53.109L320.792,53.153L320.731,53.267L320.626,53.496L320.619,53.555L320.619,53.614L320.59,53.693L320.572,53.769L320.59,53.858L320.623,53.941L320.76,54.154L320.814,54.217L320.875,54.276L320.641,54.338L320.598,54.368L320.457,54.489L320.414,54.606L320.418,54.732L320.392,54.779L320.356,54.819L320.313,54.845L320.158,54.904L320.058,54.962L319.96,55.052L319.921,55.1L319.845,55.085L319.798,55.043L319.842,54.989L319.831,54.929L319.852,54.767L319.827,54.703L319.906,54.654L319.942,54.576L320.029,54.515L320.086,54.46L320.097,54.415L320.043,54.366L319.989,54.331L319.91,54.331L319.834,54.342L319.788,54.389L319.77,54.451L319.773,54.479L319.766,54.505L319.651,54.59L319.665,54.68L319.701,54.726L319.744,54.748L319.73,54.778L319.676,54.851L319.636,54.857L319.564,54.757L319.474,54.701L319.363,54.701L319.251,54.722L319.161,54.79L319.132,54.845L319.114,54.903L319.122,55.043L319.086,55.161L319.017,55.264L318.981,55.302L318.898,55.371L318.837,55.38L318.794,55.349L318.762,55.3L318.805,55.125L318.801,55.026L318.902,54.976L318.819,54.904L318.718,54.877L318.578,54.913L318.538,54.956L318.51,55.014L318.434,55.085L318.348,55.153L318.254,55.267L318.189,55.404L317.98,55.359L317.865,55.349L317.75,55.352L317.545,55.337L317.318,55.364L317.062,55.416L317.077,55.378L317.289,55.297L317.296,55.272L317.275,55.227L317.224,55.225L317.098,55.241L317.034,55.234L317.005,55.186L316.962,55.165L316.936,55.186L316.944,55.279L316.911,55.291L316.872,55.267L316.886,55.194L316.857,55.088L316.854,55.021L316.897,54.965L316.854,54.941L316.803,54.949L316.742,54.977L316.692,55.015L316.576,55.21L316.533,55.321L316.616,55.411L316.843,55.536L316.879,55.566L316.882,55.62L316.854,55.675L316.792,55.701L316.544,55.743L316.332,55.823L316.267,55.904L316.072,56.222L315.918,56.439L315.694,56.514L315.453,56.446L315.396,56.371L315.345,56.278L315.255,56.194L315.176,56.102L315.129,55.993L315.136,55.817L315.1,55.712L315.133,55.684L315.266,55.62L315.309,55.583L315.385,55.5L315.414,55.453L315.417,55.382L315.356,55.345L315.198,55.347L315.043,55.37L314.931,55.338L314.784,55.253L314.74,55.234L314.586,55.229L314.474,55.245L314.362,55.276L314.247,55.286L314.208,55.302L314.074,55.406L313.97,55.472L313.876,55.505L313.678,55.514L313.578,55.534L313.473,55.569L313.444,55.567L313.336,55.614L313.21,55.656L313.142,55.698L313.02,55.67L312.775,55.745L312.656,55.753L312.534,55.713L312.422,55.647L312.314,55.675L312.238,55.772L312.202,55.968L312.159,56.055L312.145,56.161L312.091,56.144L311.763,55.955L311.742,55.948L311.475,55.981L311.407,55.996L311.324,56.034L311.234,56.052L311.151,56.024L311.072,55.979L310.996,55.993L310.917,56.024L310.888,55.738L310.903,55.701L310.953,55.651L311.004,55.607L311.133,55.592L311.263,55.607L311.353,55.587L311.432,55.531L311.515,55.449L311.608,55.385L311.734,55.333L311.857,55.274L311.965,55.191L312.066,55.1L312.159,55.033L312.26,54.977L312.415,54.844L312.62,54.693L312.699,54.581L312.746,54.55L312.922,54.489L313.156,54.441L313.268,54.444L313.376,54.542L313.437,54.528L313.495,54.503L313.617,54.489L313.74,54.505L313.862,54.505L313.981,54.493L314.215,54.46L314.337,54.422L314.456,54.371L314.881,54.337L315.176,54.253L315.219,54.259L315.266,54.278L315.27,54.34L315.234,54.408L315.27,54.449L315.327,54.474L315.601,54.482L315.68,54.496L315.795,54.451L315.903,54.394L316.015,54.318L316.094,54.232L316.022,54.127L316.008,54.01L316.069,53.884L316.155,53.776L316.263,53.712L316.36,53.639L316.555,53.429L316.699,53.259L316.749,53.049L316.72,52.802L316.843,52.618L316.962,52.587L317.199,52.502L317.322,52.477L317.34,52.514L317.336,52.562L317.152,52.717L317.044,52.779L316.983,52.8L316.926,52.828L316.9,52.882L316.994,52.974L317.019,53.04L317.012,53.104L317.016,53.163L317.124,53.226L317.246,53.246L317.296,53.246L317.343,53.229L317.484,53.075L317.512,53.049L317.912,52.936L318.11,52.849L318.218,52.826L318.319,52.781L318.549,52.608L318.632,52.528L318.708,52.439L318.772,52.337L318.819,52.226L318.884,52.156L319.248,51.991L319.363,51.901L319.402,51.858L319.446,51.731L319.478,51.601L319.521,51.498L319.579,51.401L319.658,51.302L319.748,51.212L319.802,51.118L319.878,50.896L319.914,50.771L319.939,50.728L319.978,50.689L320.011,50.642L320.036,50.589L320.047,50.537L320.065,50.375L320.054,50.25L319.996,50.144L319.946,50.115L319.892,50.113L319.809,50.122L319.741,50.08L319.755,50.042L319.827,50.035L319.874,50.014L319.906,49.978L319.971,49.863L320.011,49.74L320.014,49.686L319.964,49.585L319.924,49.465L319.924,49.401L319.968,49.327L320.029,49.268L320.086,49.252L320.148,49.248L320.202,49.226L320.252,49.191L320.281,49.155L320.328,49.052L320.342,48.995L320.317,48.839L320.346,48.797L320.385,48.771L320.443,48.79L320.497,48.794L320.565,48.788L320.626,48.804L320.641,48.844L320.68,49.106L320.702,49.143L320.749,49.17L320.799,49.165L320.846,49.125L320.875,49.07L320.936,49.059L321.12,49.118L321.184,49.077L321.224,49.012L321.264,48.898L321.246,48.794L321.199,48.757L321.156,48.764L321.116,48.792L321.069,48.807L320.799,48.861L320.803,48.747L320.86,48.575L320.893,48.521L320.936,48.495L321.051,48.525L321.105,48.544ZM314.359,55.743L314.496,55.784L314.636,55.774L314.636,55.956L314.654,56.017L314.694,56.073L314.676,56.153L314.74,56.18L314.55,56.271L314.377,56.392L314.305,56.474L314.244,56.56L314.204,56.652L314.182,56.753L314.125,56.713L313.959,56.552L313.855,56.507L313.686,56.484L313.632,56.489L313.286,56.64L313.239,56.75L313.146,56.916L313.102,56.972L313.052,56.988L313.016,57.015L312.976,57.158L312.868,57.246L312.804,57.248L312.692,57.224L312.642,57.238L312.71,57.097L312.602,57.081L312.494,57.083L312.494,56.993L312.429,56.941L312.476,56.873L312.476,56.819L312.505,56.788L312.516,56.744L312.512,56.706L312.447,56.696L312.404,56.668L312.411,56.569L312.375,56.566L312.282,56.583L312.087,56.659L312.033,56.659L312.116,56.606L312.289,56.531L312.364,56.488L312.537,56.368L312.642,56.31L312.699,56.21L312.717,56.147L312.753,56.093L312.786,56.008L312.84,55.979L312.937,55.904L312.991,55.911L313.052,56.003L313.135,56.073L313.192,56.067L313.3,56.031L313.351,56.022L313.473,56.028L313.581,55.982L313.628,55.93L313.642,55.866L313.603,55.757L313.657,55.767L313.707,55.762L313.826,55.692L313.948,55.653L314.074,55.642L314.218,55.68ZM311.176,56.397L311.31,56.427L311.367,56.429L311.418,56.416L311.5,56.376L311.583,56.347L311.644,56.363L311.695,56.397L311.724,56.446L311.709,56.498L311.616,56.607L311.536,56.725L311.716,56.748L311.896,56.746L311.853,56.819L311.85,56.882L311.904,56.913L311.95,56.953L311.936,56.989L311.911,57.026L312.008,57.081L312.001,57.118L311.976,57.156L311.731,57.408L311.659,57.534L311.612,57.675L311.565,57.777L311.533,57.883L311.504,57.998L311.461,58.116L311.475,58.222L311.461,58.329L311.338,58.595L311.248,58.59L311.14,58.559L311.072,58.564L311.036,58.623L311.097,58.744L310.903,58.888L310.687,58.986L310.683,58.941L310.705,58.906L310.737,58.878L310.759,58.845L310.791,58.73L310.773,58.618L310.708,58.474L310.705,58.423L310.748,58.402L310.78,58.395L310.795,58.376L310.798,58.329L310.777,58.293L310.716,58.283L310.654,58.281L310.615,58.335L310.557,58.437L310.528,58.54L310.539,58.597L310.564,58.647L310.644,58.732L310.622,58.783L310.59,58.821L310.312,58.734L310.251,58.727L310.201,58.708L310.147,58.592L310.262,58.564L310.294,58.55L310.305,58.512L310.323,58.399L310.269,58.303L310.226,58.27L310.186,58.231L310.212,58.151L310.197,58.05L310.194,57.909L310.215,57.885L310.32,57.857L310.395,57.781L310.464,57.696L310.561,57.545L310.64,57.382L310.564,57.373L310.5,57.343L310.568,57.265L310.546,57.168L310.442,57.048L310.381,56.908L310.287,56.845L310.237,56.823L310.176,56.856L310.125,56.896L310.172,56.988L310.168,57.067L310.176,57.149L310.222,57.152L310.28,57.133L310.327,57.147L310.352,57.189L310.359,57.244L310.341,57.298L310.298,57.324L310.244,57.323L310.194,57.293L310.15,57.251L310.053,57.229L309.952,57.277L309.851,57.378L309.769,57.428L309.808,57.356L309.826,57.274L309.787,57.218L309.689,57.125L309.668,57.071L309.661,57.005L309.679,56.941L309.779,57.015L309.83,57.107L309.902,57.147L309.992,57.149L309.923,57.012L309.898,56.977L309.797,56.916L309.664,56.814L309.581,56.764L309.61,56.656L309.661,56.635L309.704,56.64L309.844,56.679L309.859,56.625L309.837,56.597L309.826,56.562L309.92,56.517L310.071,56.479L310.104,56.46L310.132,56.422L310.168,56.402L310.276,56.402L310.366,56.366L310.438,56.265L310.456,56.212L310.485,56.165L310.669,56.085L310.716,56.073L310.838,56.083L310.953,56.128L311.011,56.224L311.058,56.328ZM318.547,43L318.531,43.023L318.499,43.11L318.391,43.256L318.337,43.457L318.211,43.537L318.106,43.749L317.768,44.072L317.685,44.181L317.426,44.36L317.149,44.606L316.803,44.829L316.738,44.921L316.605,45.021L316.461,45.177L316.252,45.334L316.209,45.438L316.141,45.511L315.986,45.559L315.874,45.627L315.532,46.028L315.489,46.101L315.482,46.165L315.259,46.315L315.133,46.474L314.917,46.573L314.694,46.709L314.157,46.959L314.01,47.052L313.711,47.17L313.588,47.172L313.329,47.236L313.16,47.302L313.059,47.278L312.998,47.191L312.922,47.195L312.865,47.207L312.71,47.124L312.577,47.129L312.483,47.091L312.303,47.117L312.336,46.761L312.31,46.686L312.235,46.756L312.03,46.881L311.947,46.905L311.868,46.905L311.9,46.828L312.012,46.721L311.976,46.703L311.94,46.698L311.796,46.745L311.724,46.797L311.515,47.004L311.392,47.177L311.292,47.228L311.245,47.302L311.158,47.374L311.025,47.354L310.946,47.367L310.755,47.327L310.708,47.344L310.834,47.478L310.73,47.674L310.687,47.698L310.636,47.726L310.568,47.709L310.456,47.698L310.316,47.787L310.237,47.816L310.179,47.903L310.068,47.955L310.006,48.009L309.927,48.103L309.877,48.195L309.758,48.288L309.686,48.405L309.682,48.505L309.758,48.608L309.765,48.696L309.711,48.877L309.743,49.068L309.707,49.143L309.34,49.274L309.247,49.339L309.11,49.509L308.944,49.571L308.843,49.641L308.703,49.682L308.609,49.802L308.512,49.87L308.393,49.912L308.303,49.964L308.105,49.967L307.965,50.004L307.868,50.104L307.569,50.219L307.526,50.304L307.547,50.438L307.547,50.538L307.522,50.623L307.457,50.599L307.421,50.627L307.382,50.703L307.396,50.792L307.497,50.821L307.58,50.856L307.699,50.875L307.785,50.917L307.972,51.102L308.123,51.184L308.163,51.214L308.249,51.255L308.329,51.319L308.375,51.377L308.62,51.825L308.851,52.113L309.052,52.323L309.337,52.726L309.419,52.941L309.427,53.075L309.473,53.259L309.434,53.363L309.445,53.529L309.427,53.614L309.394,53.677L309.391,53.798L309.401,53.863L309.405,53.948L309.427,53.981L309.459,53.993L309.509,53.962L309.574,53.95L309.563,54.052L309.484,54.312L309.419,54.502L309.329,54.666L309.214,54.818L309.077,54.877L308.98,54.899L308.797,54.906L308.642,54.88L308.512,54.899L308.458,54.93L308.419,54.984L308.447,55.068L308.444,55.13L308.386,55.125L308.275,55.088L308.152,55.085L308.095,55.066L308.037,54.977L307.976,54.981L307.871,55.035L307.713,55.045L307.659,55.074L307.641,55.111L307.663,55.156L307.742,55.217L307.717,55.279L307.634,55.311L307.565,55.234L307.522,55.16L307.475,55.156L307.403,55.177L307.389,55.257L307.425,55.312L307.479,55.375L307.4,55.448L307.382,55.5L307.324,55.536L307.173,55.455L307.195,55.396L307.259,55.338L307.27,55.279L307.249,55.245L307.029,55.394L306.896,55.561L306.827,55.548L306.795,55.505L306.755,55.488L306.611,55.597L306.583,55.682L306.532,55.686L306.507,55.649L306.507,55.571L306.482,55.507L306.334,55.41L306.266,55.326L306.302,55.279L306.424,55.305L306.525,55.302L306.503,55.262L306.471,55.243L306.539,55.222L306.593,55.175L306.547,55.163L306.478,55.189L306.421,55.177L306.399,55.068L306.327,54.955L306.291,54.845L306.359,54.783L306.395,54.686L306.46,54.545L306.493,54.498L306.583,54.465L306.615,54.429L306.565,54.41L306.485,54.394L306.489,54.352L306.543,54.331L306.601,54.286L306.716,54.231L306.752,54.128L306.719,54.102L306.647,54.078L306.665,54.026L306.694,53.986L306.683,53.962L306.597,53.896L306.539,53.833L306.557,53.764L306.543,53.66L306.55,53.571L306.547,53.522L306.507,53.415L306.489,53.305L306.431,53.323L306.388,53.349L306.23,53.311L306.179,53.309L306.161,53.227L306.215,53.128L306.352,53.042L306.428,53.031L306.485,52.993L306.579,52.981L306.687,53.04L306.784,53.052L306.838,53.154L306.871,53.175L306.878,53.137L306.957,53.094L306.975,53.061L306.961,53.042L306.871,53.024L306.788,52.898L306.777,52.842L306.745,52.807L306.791,52.705L306.698,52.588L306.651,52.552L306.658,52.45L306.608,52.382L306.579,52.345L306.565,52.283L306.579,52.255L306.622,52.245L306.633,52.219L306.622,52.21L306.572,52.203L306.37,52.122L306.205,52.172L306.161,52.236L306.118,52.257L306.05,52.13L306,52.129L306,43ZM306.752,55.656L306.77,55.703L306.691,55.694L306.647,55.649L306.651,55.609L306.701,55.604ZM314.352,55.517L314.334,55.536L314.316,55.531L314.251,55.576L314.236,55.533L314.19,55.503L314.182,55.481L314.326,55.465L314.373,55.477ZM328,44.934L327.913,45.009L327.783,45.042L327.657,45.023L327.621,45.056L327.61,45.113L327.564,45.164L327.312,45.322L327.207,45.447L327.099,45.469L326.898,45.596L326.934,45.487L326.973,45.434L327.142,45.337L327.153,45.233L327.247,45.145L327.43,45.054L327.556,44.938L327.657,44.907L327.769,44.809L327.884,44.775L327.873,44.7L327.924,44.617L327.963,44.622L328,44.668L328,44.934ZM326.714,46.256L326.682,46.283L326.61,46.259L326.613,46.203L326.62,46.188L326.826,46.139L326.883,46.17L326.898,46.197ZM326.206,45.502L326.358,45.575L326.566,45.559L326.516,45.625L326.437,45.624L326.296,45.719L326.174,45.731L326.113,45.754L325.915,45.896L325.886,45.952L325.767,46.059L325.587,46.155L325.555,46.335L325.44,46.263L325.425,46.19L325.461,46.129L325.666,46L325.749,45.929L325.774,45.87L325.854,45.808L325.89,45.752L325.94,45.728L326.113,45.5ZM309.452,61.791L309.365,61.873L309.275,61.8L309.164,61.749L309.218,61.737L309.247,61.718L309.25,61.687L309.322,61.64L309.466,61.605L309.509,61.602L309.56,61.569L309.578,61.539L309.599,61.524L309.689,61.482L309.715,61.531L309.711,61.567L309.643,61.588L309.574,61.638L309.513,61.701L309.455,61.727L309.437,61.746ZM309.322,61.895L309.329,61.918L309.232,61.899L309.193,61.807L309.257,61.824L309.279,61.855ZM310.622,59.737L310.507,59.758L310.446,59.736L310.388,59.612L310.496,59.534L310.644,59.611L310.672,59.633ZM310.96,59.604L310.874,59.614L310.87,59.555L310.939,59.425L310.946,59.329L311.011,59.208L311.04,59.182L311.061,59.171L311.083,59.21L311.058,59.357L310.993,59.47ZM308.667,57.217L308.703,57.243L308.761,57.227L308.807,57.224L308.84,57.238L308.879,57.307L308.894,57.349L308.822,57.354L308.789,57.363L308.75,57.415L308.692,57.395L308.656,57.371L308.649,57.338ZM310.082,57.77L310.003,57.805L309.992,57.772L309.959,57.757L310.017,57.708L310.017,57.687L309.977,57.654L310.021,57.531L310.01,57.479L310.168,57.458L310.197,57.508L310.201,57.659ZM310.381,57.576L310.294,57.581L310.255,57.569L310.24,57.538L310.366,57.474L310.46,57.484L310.42,57.543ZM313.369,53.797L313.326,53.833L313.239,53.821L313.189,53.767L313.207,53.706L313.297,53.66L313.38,53.753ZM318.344,52.177L318.25,52.181L318.225,52.17L318.283,52.146L318.286,52.104L318.322,52.031L318.322,52.009L318.247,52.005L318.25,51.922L318.308,51.839L318.463,51.708L318.502,51.684L318.51,51.741L318.463,51.875L318.452,51.924L318.574,51.934L318.495,52.095ZM319.482,47.919L319.46,47.924L319.435,47.915L319.413,47.841L319.431,47.801L319.496,47.773L319.557,47.764L319.507,47.903ZM321.073,44.667L321.033,44.731L320.983,44.636L320.972,44.535L321.001,44.535L321.058,44.551L321.069,44.599ZM321.296,44.881L321.228,44.888L321.145,44.846L321.134,44.794L321.195,44.752L321.253,44.768L321.31,44.822L321.328,44.849ZM319.842,56.944L319.824,56.955L319.777,56.922L319.77,56.892L319.777,56.875L319.809,56.871L319.874,56.906ZM319.456,55.274L319.446,55.321L319.392,55.311L319.366,55.279L319.37,55.224L319.428,55.224ZM314.931,55.712L314.823,55.797L314.73,55.791L314.683,55.753L314.668,55.706L314.758,55.632L314.834,55.528L314.902,55.481L314.96,55.455L315.003,55.456L314.906,55.602ZM309.077,57.159L309.052,57.17L309.02,57.08L308.998,57.048L309.034,57.031L309.11,56.868L309.124,56.932L309.153,56.996L309.182,57.007L309.153,57.053L309.11,57.071ZM309.491,56.777L309.423,56.824L309.369,56.824L309.416,56.769L309.423,56.743L309.463,56.668L309.538,56.642L309.571,56.639L309.509,56.715ZM309.797,56.251L309.725,56.293L309.675,56.26L309.7,56.172L309.718,56.142L309.776,56.172ZM309.279,55.876L309.214,55.916L309.185,55.856L309.214,55.679L309.337,55.715L309.337,55.769ZM309.387,55.646L309.365,55.694L309.297,55.661L309.268,55.63L309.329,55.479L309.322,55.42L309.326,55.392L309.452,55.314L309.473,55.328L309.481,55.35L309.47,55.385L309.477,55.46L309.38,55.583ZM312.577,55.885L312.548,55.925L312.462,55.913L312.498,55.878L312.523,55.837L312.544,55.828L312.559,55.873ZM312.267,56.055L312.314,56.092L312.429,56.076L312.444,56.087L312.411,56.12L312.361,56.153L312.267,56.128L312.21,56.126L312.202,56.073L312.21,56.052ZM308.743,55.201L308.645,55.264L308.519,55.18L308.491,55.135L308.584,55.068L308.667,54.991L308.721,54.986ZM308.066,55.194L308.055,55.291L307.983,55.297L307.943,55.234L307.897,55.264L307.875,55.265L307.839,55.187L307.832,55.125L307.915,55.08L307.965,55.107L308.037,55.121ZM307.799,55.385L307.789,55.416L307.738,55.37L307.789,55.317ZM306.327,56.776L306.28,56.798L306.241,56.784L306.23,56.774L306.179,56.717L306.165,56.687L306.201,56.632L306.338,56.54L306.694,56.451L306.759,56.448L306.899,56.484L306.932,56.557L306.907,56.618L306.874,56.659L306.709,56.729L306.583,56.762ZM306.233,55.63L306.169,55.646L306.133,55.611L306.107,55.6L306.122,55.555L306.226,55.467L306.248,55.437L306.345,55.455L306.381,55.502L306.334,55.574ZM306.521,52.264L306.514,52.396L306.46,52.389L306.424,52.377L306.406,52.351L306.37,52.227L306.41,52.177L306.493,52.217ZM309.718,58.343L309.686,58.361L309.707,58.283L309.787,58.213L309.794,58.258ZM306.417,53.507L306.403,53.573L306.338,53.529L306.32,53.387L306.388,53.429ZM306.172,55.269L306.158,55.293L306.115,55.286L306.071,55.217L306.053,55.163L306.007,55.132L306.079,55.085L306.169,55.17ZM310.917,52.521L310.87,52.552L310.816,52.521L310.809,52.49L310.838,52.464L310.903,52.446L310.935,52.47ZM325.882,46.54L325.897,46.545L325.915,46.545L325.933,46.544L325.94,46.554L325.944,46.573L325.933,46.575L325.908,46.578L325.893,46.58L325.886,46.566L325.882,46.556L325.868,46.549L325.868,46.542ZM326.358,46.375L326.332,46.381L326.289,46.375L326.275,46.37L326.282,46.361L326.311,46.348L326.332,46.353L326.35,46.356ZM326.044,46.591L326.034,46.592L326.026,46.58L326.048,46.566L326.088,46.551L326.102,46.559L326.088,46.572L326.07,46.578Z";
+const TODAY = new Date('2026-11-06T12:00:00');
+const HOME = { name:'Singapore', lat:1.35, lon:103.82 };
+const CITIES = {
+  'Tokyo':[35.68,139.69,'Japan','r'], 'Hakone':[35.23,139.10,'Japan',''], 'Kyoto':[35.01,135.77,'Japan',''], 'Osaka':[34.69,135.50,'Japan','b'],
+  'Seoul':[37.57,126.98,'South Korea','l'], 'Busan':[35.18,129.08,'South Korea',''],
+  'London':[51.51,-0.13,'United Kingdom','l'], 'Paris':[48.86,2.35,'France','r'],
+  'Ubud':[-8.51,115.26,'Indonesia','r'], 'Bangkok':[13.76,100.50,'Thailand','l'], 'Chiang Mai':[18.79,98.98,'Thailand','l'],
+  'Taipei':[25.03,121.57,'Taiwan','r'], 'Melbourne':[-37.81,144.96,'Australia','r']
+};
+const LABEL_TEXT = { 'Tokyo':'Tokyo, Hakone', 'Osaka':'Kyoto, Osaka', 'Seoul':'Seoul, Busan' };
+const TRIPS = [
+  { id:'jp', name:'Japan in Autumn', start:'2026-11-20', dates:'20–27 Nov 2026', days:8, route:'SIN → HND', route2:'KIX → SIN', cities:['Tokyo','Hakone','Kyoto','Osaka'] },
+  { id:'kr', name:'Seoul & Busan', start:'2026-04-03', dates:'3–10 Apr 2026', days:8, route:'SIN → ICN', route2:'PUS → SIN', cities:['Seoul','Busan'] },
+  { id:'eu', name:'London & Paris at Christmas', start:'2025-12-18', dates:'18–30 Dec 2025', days:13, route:'SIN → LHR', route2:'CDG → SIN', cities:['London','Paris'] },
+  { id:'id', name:'Ubud slow week', start:'2025-06-07', dates:'7–13 Jun 2025', days:7, route:'SIN → DPS', route2:'DPS → SIN', cities:['Ubud'] },
+  { id:'th', name:'Bangkok + Chiang Mai', start:'2024-10-14', dates:'14–20 Oct 2024', days:7, route:'SIN → BKK', route2:'CNX → SIN', cities:['Bangkok','Chiang Mai'] },
+  { id:'tw', name:'Taipei long weekend', start:'2024-05-01', dates:'1–4 May 2024', days:4, route:'SIN → TPE', route2:'TPE → SIN', cities:['Taipei'] },
+  { id:'au', name:'Melbourne', start:'2023-09-22', dates:'22–28 Sep 2023', days:7, route:'SIN → MEL', route2:'MEL → SIN', cities:['Melbourne'] },
+];
+TRIPS.forEach(t => t.upcoming = new Date(t.start) > TODAY);
+const DAY_COLORS = ['#c99a3d','#3e7c74','#a34a2f','#5c7a9c','#7a8d5c','#8a5ba0','#b0763c','#4a8f8a'];
+const GRACERY = { t:'hotel', name:'Hotel Gracery Shinjuku', addr:'1-19-1 Kabukicho, Shinjuku City, Tokyo', lat:35.6946, lon:139.7022, span:'Days 1–3' };
+const CELESTINE = { t:'hotel', name:'Hotel The Celestine Kyoto Gion', addr:'572 Yasaka-shimomachi, Higashiyama Ward, Kyoto', lat:34.9985, lon:135.7775, span:'Days 5–6' };
+const DAYS = [
+  { label:'Fri 20 Nov', dow:'FRI', dn:20, city:'Tokyo', notes:'Land early. Drop bags at the hotel, keep the first day light, early night.',
+    times:[['06:30','Land at Haneda Terminal 3'],['07:40','Keikyu line + JR Yamanote to Shinjuku, about 50 min (IC card)'],['15:00','Hotel check-in']],
+    places:[ { t:'flight', name:'SQ 638 · Singapore → Tokyo Haneda', dep:'22:35', arr:'06:30', lat:35.549, lon:139.78 }, GRACERY,
+      { t:'attraction', name:'Shinjuku Gyoen National Garden', addr:'11 Naitomachi, Shinjuku City, Tokyo', lat:35.6852, lon:139.7100, note:'Autumn leaves should be near peak. ¥500 entry.' },
+      { t:'food', name:'Omoide Yokocho', addr:'1-2 Nishishinjuku, Shinjuku City, Tokyo', lat:35.6931, lon:139.6995, note:'Yakitori alley. Most stalls are cash only.' } ] },
+  { label:'Sat 21 Nov', dow:'SAT', dn:21, city:'Tokyo', notes:'Shibuya Sky slot booked for 16:20, sunset is around 16:30.',
+    times:[['09:00','Walk to Meiji Jingu from Harajuku station'],['16:20','Shibuya Sky entry slot']],
+    places:[ GRACERY,
+      { t:'attraction', name:'Meiji Jingu', addr:'1-1 Yoyogikamizonocho, Shibuya City, Tokyo', lat:35.6764, lon:139.6993, note:'Go early before the crowds.' },
+      { t:'attraction', name:'Takeshita Street', addr:'1 Jingumae, Shibuya City, Tokyo', lat:35.6716, lon:139.7031 },
+      { t:'attraction', name:'Shibuya Sky', addr:'2-24-12 Shibuya, Shibuya City, Tokyo', lat:35.6585, lon:139.7024, note:'Tickets bought: 2 × ¥2,500.' },
+      { t:'food', name:'Uobei Shibuya Dogenzaka', addr:'2-29-11 Dogenzaka, Shibuya City, Tokyo', lat:35.6590, lon:139.6975, note:'Conveyor sushi, the queue moves fast.' } ] },
+  { label:'Sun 22 Nov', dow:'SUN', dn:22, city:'Tokyo', notes:'Tsukiji first for breakfast, then east side.',
+    times:[['08:30','Tsukiji Outer Market, breakfast there'],['13:00','teamLab Planets entry']],
+    places:[ GRACERY,
+      { t:'food', name:'Tsukiji Outer Market', addr:'4-16-2 Tsukiji, Chuo City, Tokyo', lat:35.6654, lon:139.7707 },
+      { t:'attraction', name:'teamLab Planets', addr:'6-1-16 Toyosu, Koto City, Tokyo', lat:35.6491, lon:139.7898, note:'You walk through water, so wear shorts or roll-up trousers.' },
+      { t:'attraction', name:'Senso-ji', addr:'2-3-1 Asakusa, Taito City, Tokyo', lat:35.7148, lon:139.7967 } ] },
+  { label:'Mon 23 Nov', dow:'MON', dn:23, city:'Hakone', notes:'Hakone Freepass covers the Romancecar top-up? Check at the counter.',
+    times:[['08:10','Odakyu Romancecar, Shinjuku → Hakone-Yumoto (85 min)'],['15:00','Ryokan check-in, dinner at 18:30']],
+    places:[ { t:'hotel', name:'Hakone Ginyu', addr:'100-1 Miyanoshita, Hakone, Kanagawa', lat:35.2367, lon:139.0857, span:'Day 4' },
+      { t:'attraction', name:'Owakudani', addr:'1251 Sengokuhara, Hakone, Kanagawa', lat:35.2440, lon:139.0196, note:'Try the black eggs.' },
+      { t:'attraction', name:'Lake Ashi sightseeing cruise', addr:'Togendai Port, Hakone, Kanagawa', lat:35.2215, lon:139.0057 } ] },
+  { label:'Tue 24 Nov', dow:'TUE', dn:24, city:'Kyoto', notes:'Travel day. Forward the big luggage from Hakone with Yamato.',
+    times:[['09:20','Bus to Odawara, Shinkansen Hikari to Kyoto (2 h)'],['14:00','Hotel check-in']],
+    places:[ CELESTINE,
+      { t:'attraction', name:'Fushimi Inari Taisha', addr:'68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto', lat:34.9671, lon:135.7727, note:'Late afternoon light is better.' },
+      { t:'food', name:'Nishiki Market', addr:'609 Nishidaimonjicho, Nakagyo Ward, Kyoto', lat:35.0050, lon:135.7649 } ] },
+  { label:'Wed 25 Nov', dow:'WED', dn:25, city:'Kyoto', notes:'Kiyomizu-dera has evening illumination this week.',
+    times:[['07:30','Arashiyama early, before the tour groups'],['18:00','Kiyomizu-dera illumination']],
+    places:[ CELESTINE,
+      { t:'attraction', name:'Arashiyama Bamboo Grove', addr:'Sagaogurayama, Ukyo Ward, Kyoto', lat:35.0170, lon:135.6713 },
+      { t:'attraction', name:'Kinkaku-ji', addr:'1 Kinkakujicho, Kita Ward, Kyoto', lat:35.0394, lon:135.7292 },
+      { t:'attraction', name:'Kiyomizu-dera', addr:'1-294 Kiyomizu, Higashiyama Ward, Kyoto', lat:34.9949, lon:135.7850 } ] },
+  { label:'Thu 26 Nov', dow:'THU', dn:26, city:'Osaka', notes:'Last night. Takoyaki crawl in Dotonbori.',
+    times:[['10:00','JR Special Rapid, Kyoto → Osaka (30 min)']],
+    places:[ { t:'hotel', name:'Cross Hotel Osaka', addr:'2-5-15 Shinsaibashisuji, Chuo Ward, Osaka', lat:34.6716, lon:135.5011, span:'Day 7' },
+      { t:'attraction', name:'Osaka Castle', addr:'1-1 Osakajo, Chuo Ward, Osaka', lat:34.6873, lon:135.5262 },
+      { t:'food', name:'Dotonbori', addr:'Dotonbori, Chuo Ward, Osaka', lat:34.6687, lon:135.5013, note:'Takoyaki at Wanaka.' } ] },
+  { label:'Fri 27 Nov', dow:'FRI', dn:27, city:'Osaka → Singapore', notes:'Check out by 07:00.',
+    times:[['07:30','Haruka express, Tennoji → Kansai Airport'],['11:05','Flight home']],
+    places:[ { t:'flight', name:'SQ 619 · Osaka Kansai → Singapore', dep:'11:05', arr:'17:10', lat:34.432, lon:135.230 } ] },
+];
+const RATES = { SGD:1, JPY:1/115, KRW:1/1050, EUR:1.44, GBP:1.70, USD:1.31, THB:1/26.5 };
+const CURRENCIES = Object.keys(RATES);
+const CATS = [
+  { k:'Air ticket', ic:'✈️', mode:'pax', color:'#3e7c74' },
+  { k:'Hotel', ic:'🏨', mode:'nights', color:'#c99a3d' },
+  { k:'Attractions', ic:'🎟️', mode:'pax', color:'#a34a2f' },
+  { k:'Food', ic:'🍜', mode:'single', color:'#7a8d5c' },
+  { k:'Transport', ic:'🚆', mode:'pax', color:'#5c7a9c' },
+  { k:'Misc', ic:'🧾', mode:'single', color:'#9a8f7a' },
+];
+const catOf = k => CATS.find(c => c.k === k);
+
+/* ===== Prototype state (memory only) ===== */
+const S = {
+  variant: 'a', screen: 'home', day: 1, mapMode: 'day', sync: 'synced', scale: 1,
+  sheet: null, placeTab: 'link', link: '', q: '', placeCat: 'food', step: 1, hlCity: null, toast: null,
+  draft: { cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'2' },
+  expenses: [
+    { cat:'Air ticket', desc:'SQ return, Singapore ⇄ Tokyo / Osaka', date:'2026-08-14', cur:'SGD', unit:1180, qty:2 },
+    { cat:'Hotel', desc:'Hotel Gracery Shinjuku', date:'2026-11-20', cur:'JPY', total:84600, nights:3 },
+    { cat:'Hotel', desc:'Hakone Ginyu, with dinner', date:'2026-11-23', cur:'JPY', total:98000, nights:1 },
+    { cat:'Hotel', desc:'Hotel The Celestine Kyoto Gion', date:'2026-11-24', cur:'JPY', total:76400, nights:2 },
+    { cat:'Hotel', desc:'Cross Hotel Osaka', date:'2026-11-26', cur:'JPY', total:24800, nights:1 },
+    { cat:'Attractions', desc:'Shibuya Sky', date:'2026-11-21', cur:'JPY', unit:2500, qty:2 },
+    { cat:'Attractions', desc:'teamLab Planets', date:'2026-11-22', cur:'JPY', unit:3800, qty:2 },
+    { cat:'Transport', desc:'Hakone Freepass from Shinjuku', date:'2026-11-23', cur:'JPY', unit:6100, qty:2 },
+    { cat:'Transport', desc:'Shinkansen, Odawara → Kyoto', date:'2026-11-24', cur:'JPY', unit:11870, qty:2 },
+    { cat:'Food', desc:'Omoide Yokocho dinner', date:'2026-11-20', cur:'JPY', total:7400 },
+  ],
+};
+
+/* ===== Helpers ===== */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PLANE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 1.8c.9 0 1.6 1 1.6 2.2v5.1l7.6 4.4v2.1l-7.6-2.3v4.7l2.3 1.7v1.6L12 20.3l-3.9 1v-1.6l2.3-1.7v-4.7L2.8 15.6v-2.1l7.6-4.4V4c0-1.2.7-2.2 1.6-2.2z"/></svg>';
+function fmt(cur, n){
+  if(!isFinite(n)) return '—';
+  const dec = (cur === 'JPY' || cur === 'KRW') ? 0 : 2;
+  const s = Number(n).toLocaleString('en-SG', { minimumFractionDigits:dec, maximumFractionDigits:dec });
+  return ({ SGD:'S$', JPY:'¥', EUR:'€', GBP:'£', USD:'US$' }[cur] || cur + ' ') + s;
+}
+const toSGD = (cur, n) => n * (RATES[cur] || 1);
+function expTotal(e){
+  const m = catOf(e.cat).mode;
+  if(m === 'pax' && e.unit != null) return Number(e.unit) * Number(e.qty || 1);
+  return Number(e.total);
+}
+function breakdown(e){
+  const m = catOf(e.cat).mode;
+  if(m === 'pax' && e.unit != null) return `${e.qty} ${Number(e.qty) === 1 ? 'person' : 'people'} × ${fmt(e.cur, e.unit)}`;
+  if(m === 'nights' && e.nights) return `${e.nights} ${Number(e.nights) === 1 ? 'night' : 'nights'} · ${fmt(e.cur, e.total / e.nights)} / night`;
+  return '';
+}
+function dateShort(iso){ const d = new Date(iso + 'T00:00:00'); return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' }); }
+function daysUntil(iso){ return Math.round((new Date(iso + 'T00:00:00') - new Date(TODAY.toDateString())) / 864e5); }
+
+/* visited stats */
+function stats(){
+  const past = TRIPS.filter(t => !t.upcoming);
+  const cities = new Set(past.flatMap(t => t.cities));
+  const countries = new Set([...cities].map(c => CITIES[c][2]));
+  return { trips: past.length, cities: cities.size, countries: countries.size, days: past.reduce((a,t) => a + t.days, 0), next: TRIPS.find(t => t.upcoming) };
+}
+function cityStatus(name){ return TRIPS.some(t => !t.upcoming && t.cities.includes(name)) ? 'past' : 'up'; }
+
+/* ===== World map (equirectangular, 1 unit = 1°) ===== */
+const W = (lon, lat) => [lon + 180, 90 - lat];
+function worldMap(opts){
+  const { look, fit, labels = true, arcs = false } = opts;
+  let vb = [0, 8, 360, 132];
+  if(fit){
+    const pts = Object.values(CITIES).map(c => W(c[1], c[0])).concat([W(HOME.lon, HOME.lat)]);
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    let x0 = Math.min(...xs) - 16, x1 = Math.max(...xs) + 32, y0 = Math.min(...ys) - 10, y1 = Math.max(...ys) + 10;
+    const want = 1.45; const h = y1 - y0, w = x1 - x0;
+    if(w / h < want){ const nw = h * want; x0 -= (nw - w) / 2; x1 += (nw - w) / 2; } else { const nh = w / want; y0 -= (nh - h) / 2; y1 += (nh - h) / 2; }
+    vb = [x0, y0, x1 - x0, y1 - y0];
+  }
+  const C = {
+    a:{ sea:'transparent', land:'#24385a', stroke:'#2f4670', past:'#c99a3d', up:'#f1e9d4', home:'#5fb3a6', arc:'rgba(201,154,61,.55)' },
+    b:{ sea:'#dfe7e6', land:'#f8f3e6', stroke:'#c9bfa5', past:'#a34a2f', up:'#2f6e66', home:'#101b2d', arc:'rgba(163,74,47,.45)' },
+    c:{ sea:'transparent', land:'#e2d7bb', stroke:'#e2d7bb', past:'#101b2d', up:'#c99a3d', home:'#2f6e66', arc:'rgba(16,27,45,.35)' },
+  }[look];
+  const r = vb[2] * (look === 'c' ? 0.011 : look === 'b' ? 0.009 : 0.0062);   // dot size follows the zoom
+  let s = `<svg viewBox="${vb.join(' ')}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="World map of cities visited">`;
+  if(C.sea !== 'transparent') s += `<rect x="${vb[0]-400}" y="${vb[1]-400}" width="${vb[2]+800}" height="${vb[3]+800}" fill="${C.sea}"/>`;
+  s += `<path d="${LAND}" fill="${C.land}" stroke="${C.stroke}" stroke-width="0.6" vector-effect="non-scaling-stroke"/>`;
+  const H = W(HOME.lon, HOME.lat);
+  if(arcs){
+    TRIPS.forEach(t => {
+      const c = CITIES[t.cities[0]]; const P = W(c[1], c[0]);
+      const mx = (H[0] + P[0]) / 2, my = (H[1] + P[1]) / 2; const dx = P[0] - H[0], dy = P[1] - H[1]; const len = Math.hypot(dx, dy);
+      let px = -dy / len, py = dx / len; if(py > 0){ px = -px; py = -py; }
+      const cx = mx + px * len * 0.2, cy = my + py * len * 0.2;
+      s += `<path d="M${H[0]} ${H[1]} Q${cx.toFixed(2)} ${cy.toFixed(2)} ${P[0]} ${P[1]}" fill="none" stroke="${C.arc}" stroke-width="1.4" stroke-dasharray="${t.upcoming ? '4 4' : '0'}" vector-effect="non-scaling-stroke"/>`;
+    });
+  }
+  Object.entries(CITIES).forEach(([name, c]) => {
+    const [x, y] = W(c[1], c[0]); const st = cityStatus(name); const hl = S.hlCity === name;
+    const rr = hl ? r * 1.8 : r;
+    s += st === 'past'
+      ? `<circle class="citydot" data-act="hl" data-c="${esc(name)}" cx="${x}" cy="${y}" r="${rr}" fill="${C.past}" stroke="${look === 'a' ? '#101b2d' : '#fff'}" stroke-width="1.2" vector-effect="non-scaling-stroke"><title>${esc(name)}</title></circle>`
+      : `<circle class="citydot" data-act="hl" data-c="${esc(name)}" cx="${x}" cy="${y}" r="${rr}" fill="none" stroke="${C.up}" stroke-width="2" vector-effect="non-scaling-stroke"><title>${esc(name)} (upcoming)</title></circle>`;
+  });
+  s += `<rect x="${H[0] - r}" y="${H[1] - r}" width="${r * 2}" height="${r * 2}" fill="${C.home}" transform="rotate(45 ${H[0]} ${H[1]})"><title>Singapore (home)</title></rect>`;
+  s += `</svg>`;
+  let labs = '';
+  if(labels){
+    const pos = (lon, lat) => { const [x, y] = W(lon, lat); return `left:${((x - vb[0]) / vb[2] * 100).toFixed(2)}%;top:${((y - vb[1]) / vb[3] * 100).toFixed(2)}%`; };
+    Object.entries(CITIES).forEach(([name, c]) => {
+      const hl = S.hlCity === name;
+      if(!c[3] && !hl) return;
+      const cls = hl ? 'r hl' : c[3];
+      labs += `<span class="lab ${cls === 'r' ? '' : cls}" style="${pos(c[1], c[0])}">${esc(hl ? name : (LABEL_TEXT[name] || name))}</span>`;
+    });
+    labs += `<span class="lab b" style="${pos(HOME.lon, HOME.lat)}">Singapore · home</span>`;
+  }
+  return `<div class="world">${s}${labs}</div>`;
+}
+
+/* ===== Trip map (Japan, cos-corrected equirectangular) ===== */
+const KX = Math.cos(36 * Math.PI / 180);
+const J = (lon, lat) => [(lon + 180) * KX, 90 - lat];
+function tripMap(opts){
+  const { aspect = 4/3, look = 'a', extra = null } = opts;
+  const mode = S.mapMode;
+  const d = DAYS[S.day];
+  let marks = [];      // {x,y,label,color,kind,txt}
+  let route = [];
+  if(mode === 'day'){
+    let n = 0;
+    d.places.forEach(p => {
+      const [x, y] = J(p.lon, p.lat);
+      const kind = p.t === 'hotel' ? 'hotel' : p.t === 'flight' ? 'flight' : 'stop';
+      const txt = kind === 'hotel' ? 'H' : kind === 'flight' ? '✈' : String(++n);
+      marks.push({ x, y, kind, txt, color: DAY_COLORS[S.day % 8], name: p.name });
+      if(kind === 'stop') route.push([x, y]);
+    });
+  } else {
+    const byCity = {};
+    DAYS.forEach((dd, i) => dd.places.forEach(p => {
+      if(p.t === 'flight') return;
+      const key = dd.city.split(' ')[0];
+      (byCity[key] = byCity[key] || { pts:[], days:new Set(), i }).pts.push(J(p.lon, p.lat)); byCity[key].days.add(i + 1);
+    }));
+    Object.entries(byCity).forEach(([city, o]) => {
+      const x = o.pts.reduce((a, p) => a + p[0], 0) / o.pts.length, y = o.pts.reduce((a, p) => a + p[1], 0) / o.pts.length;
+      const ds = [...o.days]; const rng = ds.length > 1 ? `Days ${ds[0]}–${ds[ds.length - 1]}` : `Day ${ds[0]}`;
+      marks.push({ x, y, kind:'city', txt:String(ds[0]), color: DAY_COLORS[o.i % 8], name: `${city} · ${rng}` });
+      route.push([x, y]);
+    });
+  }
+  const pts = marks.map(m => [m.x, m.y]);
+  if(extra) pts.push(J(extra.lon, extra.lat));
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const minSpan = mode === 'day' ? 0.06 : 2.5;
+  let w = Math.max(x1 - x0, minSpan), h = Math.max(y1 - y0, minSpan / aspect);
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+  w *= 1.45; h *= 1.45;
+  if(w / h < aspect) w = h * aspect; else h = w / aspect;
+  const vb = [cx - w / 2, cy - h / 2, w, h];
+  const R = w * 0.028;
+  const C = {
+    a:{ sea:'#dce5e3', land:'#f6f0e1', stroke:'#c4b998', route:'#101b2d' },
+    b:{ sea:'#dfe7e6', land:'#f8f3e6', stroke:'#c9bfa5', route:'#101b2d' },
+    c:{ sea:'#e6ece9', land:'#f7f1e2', stroke:'#cdbf9c', route:'#101b2d' },
+  }[look];
+  let s = `<svg viewBox="${vb.map(v => v.toFixed(4)).join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Trip map">`;
+  s += `<rect x="${vb[0] - w}" y="${vb[1] - h}" width="${w * 3}" height="${h * 3}" fill="${C.sea}"/>`;
+  s += `<g transform="scale(${KX} 1)"><path d="${JAPAN}" fill="${C.land}" stroke="${C.stroke}" stroke-width="1" vector-effect="non-scaling-stroke"/></g>`;
+  if(route.length > 1) s += `<polyline points="${route.map(p => p.join(',')).join(' ')}" fill="none" stroke="${C.route}" stroke-opacity=".45" stroke-width="2" stroke-dasharray="6 5" vector-effect="non-scaling-stroke"/>`;
+  marks.forEach(m => {
+    s += '<g>';
+    if(m.kind === 'hotel') s += `<rect x="${m.x - R}" y="${m.y - R}" width="${R * 2}" height="${R * 2}" rx="${R * .35}" fill="#101b2d" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    else s += `<circle cx="${m.x}" cy="${m.y}" r="${R}" fill="${m.kind === 'flight' ? '#5c7a9c' : m.color}" stroke="#fff" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    s += `<text x="${m.x}" y="${m.y}" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Mono, monospace" font-weight="600" font-size="${R * 1.05}" fill="#fff">${m.txt}</text>`;
+    if(m.kind === 'city') s += `<text x="${m.x + R * 1.5}" y="${m.y}" dominant-baseline="central" font-family="Plus Jakarta Sans, sans-serif" font-weight="700" font-size="${R * 1.15}" fill="#101b2d" stroke="${C.land}" stroke-width="${R * .35}" paint-order="stroke">${esc(m.name)}</text>`;
+    s += `<title>${esc(m.name)}</title></g>`;
+  });
+  if(extra){
+    const [ex, ey] = J(extra.lon, extra.lat);
+    s += `<circle class="newpin" cx="${ex}" cy="${ey}" r="${R * 1.3}" fill="none" stroke="#c99a3d" stroke-width="3" vector-effect="non-scaling-stroke"/>`;
+    s += `<circle cx="${ex}" cy="${ey}" r="${R}" fill="#c99a3d" stroke="#101b2d" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+    s += `<text x="${ex}" y="${ey}" text-anchor="middle" dominant-baseline="central" font-family="IBM Plex Mono, monospace" font-weight="700" font-size="${R}" fill="#101b2d">+</text>`;
+  }
+  s += `</svg>`;
+  return `<div class="tripmap" style="aspect-ratio:${aspect}">${s}<span class="mapnote">Mockup map · the real app keeps your Google / OpenStreetMap map</span></div>`;
+}
+
+/* ===== Google Maps link parsing (the real parsing the app would use) ===== */
+const EXAMPLES = {
+  long: 'https://www.google.com/maps/place/Ichiran+Shibuya/@35.6612,139.7016,17z/data=!3m1!4b1!4m6!3m5!1s0x60188ca8b7c0a2a9:0x1!8m2!3d35.6611!4d139.7017',
+  shared: 'Ichiran Shibuya\n1F, 1-22-7 Jinnan, Shibuya City, Tokyo 150-0041\nhttps://maps.app.goo.gl/q7XbYz3kLm2N',
+  short: 'https://maps.app.goo.gl/q7XbYz3kLm2N',
+};
+const KNOWN_ADDRESSES = { 'ichiran shibuya': { lat:35.6611, lon:139.7017 } };   // stands in for one Geocoding call
+function parseMaps(text){
+  const t = (text || '').trim();
+  if(!t) return { kind:'empty' };
+  const num = '(-?\\d{1,3}\\.\\d+)';
+  let m = t.match(new RegExp('!3d' + num + '!4d' + num)) || t.match(new RegExp('@' + num + ',' + num)) || t.match(new RegExp('[?&](?:q|query|ll|destination|center)=' + num + ',\\s*' + num)) || t.match(new RegExp('^' + num + ',\\s*' + num + '$'));
+  const nameM = t.match(/\/maps\/place\/([^/@?]+)/);
+  const name = nameM ? decodeURIComponent(nameM[1].replace(/\+/g, ' ')) : '';
+  if(m) return { kind:'coords', lat:+m[1], lon:+m[2], name: name || 'Dropped pin' };
+  const lines = t.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const urls = lines.filter(l => /^https?:\/\//.test(l));
+  const words = lines.filter(l => !/^https?:\/\//.test(l) && !/[★☆]/.test(l));
+  if(words.length){
+    const nm = words[0], addr = words.slice(1).join(', ');
+    const hit = KNOWN_ADDRESSES[nm.toLowerCase()];
+    return { kind:'text', name:nm, addr, lat: hit && hit.lat, lon: hit && hit.lon };
+  }
+  if(urls.some(u => /goo\.gl|g\.co\/kgs/.test(u))) return { kind:'short' };
+  if(name) return { kind:'text', name, addr:'' };
+  return { kind:'unknown' };
+}
+function linkResultHTML(){
+  const r = parseMaps(S.link);
+  if(r.kind === 'empty') return `<div class="linkres"><p class="meta">Paste a link from Google Maps, or the whole text you get from its Share button. The place appears on the map straight away.</p></div>`;
+  if(r.kind === 'coords') return `<div class="linkres ok"><p class="eyebrow">Found the location in the link · no lookup needed</p><h4>${esc(r.name)}</h4><p class="meta mono">${r.lat.toFixed(4)}, ${r.lon.toFixed(4)}</p></div>`;
+  if(r.kind === 'text' && r.lat) return `<div class="linkres ok"><p class="eyebrow">Looked up the address · 1 Geocoding call (free tier)</p><h4>${esc(r.name)}</h4><p class="meta">${esc(r.addr)}</p><p class="meta mono">${r.lat.toFixed(4)}, ${r.lon.toFixed(4)}</p></div>`;
+  if(r.kind === 'text') return `<div class="linkres"><p class="eyebrow">Would look this up · 1 Geocoding call</p><h4>${esc(r.name)}</h4><p class="meta">${esc(r.addr || 'No address in the text, so the app searches by name.')}</p><p class="meta">In the mockup only the Ichiran example has a location.</p></div>`;
+  if(r.kind === 'short') return `<div class="linkres warn"><h4>Short links can't be opened from inside the app</h4><p class="meta">A maps.app.goo.gl link hides the location, and browsers don't let a web page follow it. In Google Maps, tap Share → Copy and paste the whole text (it includes the name and address), or open the link and copy the long address from the address bar.</p></div>`;
+  return `<div class="linkres warn"><h4>That doesn't look like a Google Maps link</h4><p class="meta">Try the Share button in Google Maps, then paste here.</p></div>`;
+}
+function currentParsedPin(){
+  if(S.sheet !== 'place' || S.placeTab !== 'link') return null;
+  const r = parseMaps(S.link);
+  return r.lat ? r : null;
+}
+const SEARCH_SAMPLE = [
+  { name:'Ichiran Shinjuku Central East Exit', addr:'3-34-11 Shinjuku, Shinjuku City, Tokyo' },
+  { name:'Ichiran Shibuya', addr:'1-22-7 Jinnan, Shibuya City, Tokyo' },
+  { name:'Ichiran Roppongi', addr:'4-11-11 Roppongi, Minato City, Tokyo' },
+];
+function placeFormHTML(){
+  const tabs = `<div class="seg" role="group" aria-label="How to find the place">
+    <button type="button" data-act="ptab" data-t="search" aria-pressed="${S.placeTab === 'search'}">Search by name</button>
+    <button type="button" data-act="ptab" data-t="link" aria-pressed="${S.placeTab === 'link'}">Paste Google Maps link</button></div>`;
+  let body;
+  if(S.placeTab === 'search'){
+    const q = S.q.trim().toLowerCase();
+    const hits = q.length > 1 ? SEARCH_SAMPLE.filter(p => p.name.toLowerCase().includes(q)) : [];
+    body = `<div class="field"><label for="pq">Place name</label><input id="pq" class="inp" data-in="q" value="${esc(S.q)}" placeholder="e.g. Ichiran" autocomplete="off"></div>
+      <div id="searchres">${searchResHTML(hits, q)}</div>`;
+  } else {
+    body = `<div class="field"><label for="plink">Google Maps link or shared text</label><textarea id="plink" class="inp" data-in="link" placeholder="https://maps.app.goo.gl/…  or  https://www.google.com/maps/place/…">${esc(S.link)}</textarea></div>
+      <div class="examples"><span>Try:</span>
+        <button type="button" class="chip" data-act="ex" data-k="long">Full link</button>
+        <button type="button" class="chip" data-act="ex" data-k="shared">Shared text</button>
+        <button type="button" class="chip" data-act="ex" data-k="short">Short link only</button></div>
+      <div id="linkres">${linkResultHTML()}</div>`;
+  }
+  return `${tabs}${body}
+    <div class="grid2">
+      <div class="field"><span class="lbl">Type</span><div class="chips">
+        <button type="button" class="chip" data-act="pcat" data-c="attraction" aria-pressed="${S.placeCat === 'attraction'}">📍 Attraction</button>
+        <button type="button" class="chip" data-act="pcat" data-c="food" aria-pressed="${S.placeCat === 'food'}">🍜 Food</button></div></div>
+      <div class="field"><label for="pday">Add to</label><select id="pday" class="inp" data-in="pday">${DAYS.map((d, i) => `<option value="${i}" ${i === S.day ? 'selected' : ''}>Day ${i + 1} · ${esc(d.city)}</option>`).join('')}</select></div>
+    </div>`;
+}
+function searchResHTML(hits, q){
+  if(!q || q.length < 2) return `<p class="meta" style="color:var(--muted)">Type at least two letters. Results show the full address so you can pick the right branch.</p>`;
+  if(!hits.length) return `<div class="linkres warn"><h4>No match for "${esc(q)}"</h4><p class="meta">Can't find it? <button type="button" class="btn small ghost" data-act="ptab" data-t="link">Paste a Google Maps link instead</button></p></div>`;
+  return `<div class="results">${hits.map(h => `<button type="button" data-act="pick" data-n="${esc(h.name)}"><b>${esc(h.name)}</b><small>${esc(h.addr)}</small></button>`).join('')}</div>`;
+}
+function addParsedPlace(){
+  let name, lat, lon, addr = '';
+  if(S.placeTab === 'link'){
+    const r = parseMaps(S.link);
+    if(!r.lat){ toast('Nothing to add yet: paste a link with a location first.'); return; }
+    ({ name, lat, lon } = r); addr = r.addr || 'Added from a Google Maps link';
+  } else {
+    const pick = SEARCH_SAMPLE.find(p => p.name === S.picked);
+    if(!pick){ toast('Pick a result first.'); return; }
+    name = pick.name; addr = pick.addr; lat = 35.6611; lon = 139.7017;
+  }
+  const di = S.pday != null ? +S.pday : S.day;
+  DAYS[di].places.push({ t:S.placeCat, name, addr, lat, lon, note:'' });
+  S.day = di; S.mapMode = 'day'; S.sheet = null; S.link = ''; S.q = ''; S.picked = null;
+  toast(`Added ${name} to Day ${di + 1}`);
+  render();
+}
+
+/* ===== Expense form ===== */
+function draftPreview(){
+  const d = S.draft; const m = catOf(d.cat).mode;
+  if(m === 'nights'){
+    const tot = parseFloat(d.total), n = parseInt(d.nights);
+    if(!(tot > 0)) return { empty:true, big:'Enter the total and number of nights' };
+    if(!(n > 0)) return { big: fmt(d.cur, tot), sub:'Add the number of nights to see the price per night' };
+    return { big: `${fmt(d.cur, tot / n)} per night`, sub: `${fmt(d.cur, tot)} for ${n} ${n === 1 ? 'night' : 'nights'}${d.cur !== 'SGD' ? ` · ≈ ${fmt('SGD', toSGD(d.cur, tot / n))} per night` : ''}` };
+  }
+  if(m === 'pax'){
+    const u = parseFloat(d.unit), q = parseInt(d.qty);
+    if(!(u > 0)) return { empty:true, big:'Enter the price for one person' };
+    const qq = q > 0 ? q : 1;
+    return { big: `${fmt(d.cur, u * qq)} total`, sub: `${qq} ${qq === 1 ? 'person' : 'people'} × ${fmt(d.cur, u)}${d.cur !== 'SGD' ? ` · ≈ ${fmt('SGD', toSGD(d.cur, u * qq))}` : ''}` };
+  }
+  const tot = parseFloat(d.total);
+  if(!(tot > 0)) return { empty:true, big:'Enter the amount' };
+  return { big: fmt(d.cur, tot), sub: d.cur !== 'SGD' ? `≈ ${fmt('SGD', toSGD(d.cur, tot))}` : '' };
+}
+function calcHTML(){ const p = draftPreview(); return `<div class="calc ${p.empty ? 'empty' : ''}" id="calc" aria-live="polite"><span class="big">${esc(p.big)}</span>${p.sub ? `<span class="sub">${esc(p.sub)}</span>` : ''}</div>`; }
+function amountFields(){
+  const d = S.draft; const m = catOf(d.cat).mode;
+  const cur = `<div class="field"><label for="fcur">Currency</label><select id="fcur" class="inp" data-f="cur">${CURRENCIES.map(c => `<option ${c === d.cur ? 'selected' : ''}>${c}</option>`).join('')}</select></div>`;
+  if(m === 'nights') return `<div class="grid3">
+      <div class="field"><label for="ftotal">Total for the stay</label><input id="ftotal" class="inp num" inputmode="decimal" data-f="total" value="${esc(d.total)}" placeholder="84600"></div>
+      <div class="field"><label for="fnights">Number of nights</label><input id="fnights" class="inp num" inputmode="numeric" data-f="nights" value="${esc(d.nights)}" placeholder="3"></div>${cur}</div>`;
+  if(m === 'pax') return `<div class="grid3">
+      <div class="field"><label for="funit">Price for 1 person</label><input id="funit" class="inp num" inputmode="decimal" data-f="unit" value="${esc(d.unit)}" placeholder="2500"></div>
+      <div class="field"><label for="fqty">How many people?</label><input id="fqty" class="inp num" inputmode="numeric" data-f="qty" value="${esc(d.qty)}" placeholder="2"></div>${cur}</div>`;
+  return `<div class="grid2">
+      <div class="field"><label for="ftotal">Amount</label><input id="ftotal" class="inp num" inputmode="decimal" data-f="total" value="${esc(d.total)}" placeholder="4200"></div>${cur}</div>`;
+}
+function expenseFormHTML(){
+  const d = S.draft;
+  return `<form class="form" data-form="exp" onsubmit="return false">
+    <div class="field"><span class="lbl">Category</span><div class="chips">${CATS.map(c => `<button type="button" class="chip" data-act="cat" data-c="${c.k}" aria-pressed="${d.cat === c.k}">${c.ic} ${c.k}</button>`).join('')}</div></div>
+    <div class="grid2">
+      <div class="field"><label for="fdesc">Description</label><input id="fdesc" class="inp" data-f="desc" value="${esc(d.desc)}" placeholder="${catOf(d.cat).mode === 'nights' ? 'Hotel name' : 'What was it?'}"></div>
+      <div class="field"><label for="fdate">Date</label><input id="fdate" type="date" class="inp" data-f="date" value="${esc(d.date)}"></div>
+    </div>
+    ${amountFields()}
+    ${calcHTML()}
+    <div><button type="button" class="btn brass" data-act="saveexp">Add expense</button></div>
+  </form>`;
+}
+function saveExpense(){
+  const d = S.draft; const m = catOf(d.cat).mode;
+  const e = { cat:d.cat, desc:d.desc || d.cat, date:d.date, cur:d.cur };
+  if(m === 'pax'){ if(!(parseFloat(d.unit) > 0)){ toast('Enter the price for one person.'); return; } e.unit = parseFloat(d.unit); e.qty = parseInt(d.qty) || 1; }
+  else { if(!(parseFloat(d.total) > 0)){ toast('Enter the amount.'); return; } e.total = parseFloat(d.total); if(m === 'nights') e.nights = parseInt(d.nights) || null; }
+  S.expenses.unshift(e);
+  S.draft = { ...d, desc:'', total:'', nights:'', unit:'' };
+  S.sheet = null; S.step = 1;
+  toast(`Added ${e.desc} · ${fmt(e.cur, expTotal(e))}`);
+  render();
+}
+function totals(){
+  const by = {}; let all = 0;
+  S.expenses.forEach(e => { const v = toSGD(e.cur, expTotal(e)); by[e.cat] = (by[e.cat] || 0) + v; all += v; });
+  return { by, all };
+}
+
+/* ===== Sync chip ===== */
+const SYNC_TEXT = {
+  synced: ['Synced', 'All devices up to date · 2 min ago'],
+  syncing: ['Syncing…', 'Sending your changes'],
+  offline: ['Offline', 'Saved on this iPad · will sync when back online'],
+};
+function syncChip(){ const [a, b] = SYNC_TEXT[S.sync]; return `<button type="button" class="sync" data-act="sync" data-s="${S.sync}" title="Tap to see the other sync states (mockup)"><span class="dot"></span><span><b>${a}</b> · ${b}</span></button>`; }
+
+/* ===== shared bits for day views ===== */
+function placeIcon(p){ return p.t === 'food' ? '🍜' : p.t === 'hotel' ? '🏨' : p.t === 'flight' ? '✈️' : '📍'; }
+function numbered(d){ let n = 0; return d.places.map(p => ({ p, n: (p.t === 'attraction' || p.t === 'food') ? ++n : null })); }
+
+/* =========================================================
+   VARIANT A
+   ========================================================= */
+function A(){
+  const st = stats(); const next = st.next;
+  const tab = (k, ic, l) => `<button type="button" class="a-tab" data-act="nav" data-to="${k}" ${S.screen === k ? 'aria-current="page"' : ''}>${ic} ${l}</button>`;
+  let main = '';
+  if(S.screen === 'home'){
+    main = `<section class="a-hero">
+        <div class="a-hero-head"><div><p class="eyebrow">Your travel map</p><h1>${st.countries} countries, ${st.cities} cities so far</h1></div>
+        <div class="legend"><span><i style="background:#c99a3d"></i>Been there</span><span><i style="border:2px solid #f1e9d4"></i>Coming up</span><span><i style="background:#5fb3a6;border-radius:2px;transform:rotate(45deg)"></i>Home</span></div></div>
+        ${worldMap({ look:'a', arcs:true })}
+        <dl class="a-stats"><div><dt>Trips</dt><dd>${st.trips}</dd></div><div><dt>Days away</dt><dd>${st.days}</dd></div><div><dt>Cities</dt><dd>${st.cities}</dd></div><div><dt>Next trip</dt><dd>${daysUntil(next.start)} days</dd></div></dl>
+      </section>
+      <section><div class="a-sec-h"><h2>Trips</h2><button type="button" class="btn small ghost" data-act="toast" data-m="New trip (not part of the mockup)">+ New trip</button></div>
+        <div class="a-passes">${TRIPS.map(t => `<button type="button" class="pass ${t.upcoming ? 'up' : ''}" data-act="trip" data-id="${t.id}">
+          <div class="main"><span class="tag ${t.upcoming ? 'up' : ''}">${t.upcoming ? `In ${daysUntil(t.start)} days` : 'Done'}</span><b>${esc(t.name)}</b><span class="cities">${t.cities.join(' · ')}</span></div>
+          <div class="stub"><span class="route">${t.route}</span><small>${t.dates}</small><small>${t.days} days</small></div></button>`).join('')}</div></section>`;
+  } else if(S.screen === 'day'){
+    const d = DAYS[S.day]; const items = numbered(d);
+    const flights = items.filter(x => x.p.t === 'flight'), hotels = items.filter(x => x.p.t === 'hotel'), stops = items.filter(x => x.n);
+    const stopHTML = x => `<li class="stop"><span class="n ${x.p.t === 'hotel' ? 'sq' : ''}" style="background:${x.p.t === 'hotel' ? '#101b2d' : x.p.t === 'flight' ? '#5c7a9c' : DAY_COLORS[S.day % 8]}">${x.n ?? (x.p.t === 'hotel' ? 'H' : '✈')}</span>
+        <div><b>${esc(x.p.name)}</b><span class="kind">${placeIcon(x.p)} ${x.p.t === 'flight' ? `${x.p.dep} → ${x.p.arr}` : x.p.t === 'hotel' ? x.p.span : x.p.t === 'food' ? 'Food' : 'Attraction'}</span>
+        ${x.p.addr ? `<div class="addr">${esc(x.p.addr)}</div>` : ''}${x.p.note ? `<div class="note">${esc(x.p.note)}</div>` : ''}</div></li>`;
+    main = `<div class="a-daystrip" role="tablist">${DAYS.map((dd, i) => `<button type="button" class="a-day" data-act="day" data-i="${i}" aria-current="${i === S.day}"><small>Day ${i + 1} · ${dd.label}</small><b>${esc(dd.city)}</b></button>`).join('')}</div>
+      <div class="a-daygrid">
+        <section class="a-card a-plan">
+          <div class="a-plan-h"><div><p class="eyebrow">Day ${S.day + 1} · ${d.label}</p><h1>${esc(d.city)}</h1></div><button type="button" class="btn" data-act="sheet" data-s="place">+ Add place</button></div>
+          ${d.notes ? `<div class="notes">${esc(d.notes)}</div>` : ''}
+          ${d.times.length ? `<div><h3>Timings</h3><ul class="times">${d.times.map(t => `<li><span class="t">${t[0]}</span><span>${esc(t[1])}</span></li>`).join('')}</ul></div>` : ''}
+          ${flights.length ? `<div><h3>✈️ Flights</h3><ul class="stops">${flights.map(stopHTML).join('')}</ul></div>` : ''}
+          ${hotels.length ? `<div><h3>🏨 Hotel</h3><ul class="stops">${hotels.map(stopHTML).join('')}</ul></div>` : ''}
+          ${stops.length ? `<div><h3>Places</h3><ul class="stops">${stops.map(stopHTML).join('')}</ul></div>` : ''}
+        </section>
+        <aside class="a-mapcol">
+          <div class="seg" role="group" aria-label="Map shows"><button type="button" data-act="mapm" data-m="day" aria-pressed="${S.mapMode === 'day'}">This day</button><button type="button" data-act="mapm" data-m="trip" aria-pressed="${S.mapMode === 'trip'}">Whole trip</button></div>
+          ${tripMap({ aspect: 4/3.4, look:'a' })}
+        </aside>
+      </div>`;
+  } else {
+    const t = totals();
+    main = `<div class="a-budget">
+          <section class="a-card"><p class="eyebrow">Spent so far · Japan in Autumn</p><div class="total">${fmt('SGD', t.all)}</div>
+            <p style="color:var(--muted);font-size:.9375rem;margin-top:6px">Converted to SGD · example rate S$1 = ¥115</p>
+            <div class="bars">${CATS.filter(c => t.by[c.k]).map(c => { const v = t.by[c.k] || 0; return `<div class="bar"><span>${c.ic} ${c.k}</span><span class="track"><span class="fill" style="display:block;width:${(v / t.all * 100).toFixed(1)}%;background:${c.color}"></span></span><span class="v">${fmt('SGD', v)}</span></div>`; }).join('')}</div>
+          </section>
+          <section class="a-card"><h2 style="font-size:1.375rem;margin-bottom:16px">Add an expense</h2>${expenseFormHTML()}</section>
+        <section class="a-card span2" style="min-width:0"><h2 style="font-size:1.375rem;margin-bottom:12px">All expenses</h2>
+          <div class="tablewrap"><table class="ledger"><thead><tr><th>Date</th><th>Item</th><th>Breakdown</th><th class="num">Amount</th><th class="num">SGD</th></tr></thead>
+          <tbody>${S.expenses.map(e => `<tr><td class="mono">${dateShort(e.date)}</td><td><span class="catdot" style="background:${catOf(e.cat).color}"></span>${esc(e.desc)}<div style="color:var(--muted);font-size:.875rem;margin-left:18px">${e.cat}</div></td><td class="brk">${esc(breakdown(e))}</td><td class="num">${fmt(e.cur, expTotal(e))}</td><td class="num">${fmt('SGD', toSGD(e.cur, expTotal(e)))}</td></tr>`).join('')}</tbody></table></div>
+        </section>
+      </div>`;
+  }
+  const sheet = S.sheet === 'place' ? `<div class="overlay" data-act="closebg"><div class="dialog" role="dialog" aria-modal="true" aria-label="Add a place">
+      <div class="dialog-h"><h2>Add a place</h2><button type="button" class="x" data-act="close" aria-label="Close">✕</button></div>
+      ${placeFormHTML()}
+      <div id="sheetmap">${previewMapHTML('a')}</div>
+      <div><button type="button" class="btn brass" data-act="addplace">Add to day</button></div></div></div>` : '';
+  return `<div class="vA"><header class="a-top"><div class="a-top-in">
+      <div class="a-brand">${PLANE}<span>Trip Tracker</span></div>
+      <button type="button" class="a-trip" data-act="nav" data-to="day"><b>Japan in Autumn</b><small>20–27 Nov 2026 · 8 days · 4 cities</small></button>
+      ${syncChip()}</div>
+      <nav class="a-tabs"><div class="a-tabs-in">${tab('home','🌏','Home')}${tab('day','📋','Itinerary')}${tab('budget','💰','Budget')}</div></nav></header>
+    <main class="a-main">${main}</main>${sheet}</div>`;
+}
+function previewMapHTML(look){
+  const pin = currentParsedPin();
+  if(!pin) return '';
+  const inJapan = pin.lon > 126 && pin.lon < 148 && pin.lat > 28 && pin.lat < 47;
+  if(!inJapan) return `<p class="meta" style="color:var(--muted)">Pin at ${pin.lat.toFixed(3)}, ${pin.lon.toFixed(3)}. (The mockup map only draws Japan.)</p>`;
+  const keep = S.mapMode; S.mapMode = 'day';
+  const h = tripMap({ aspect: 16/9, look, extra: pin }); S.mapMode = keep; return h;
+}
+
+/* =========================================================
+   VARIANT B
+   ========================================================= */
+function B(){
+  const st = stats();
+  const link = (k, ic, l, extra = '') => `<button type="button" class="b-link" data-act="nav" data-to="${k}" aria-current="${S.screen === k}"><span class="ic">${ic}</span>${l}${extra}</button>`;
+  const dayLinks = DAYS.map((d, i) => `<button type="button" class="b-link" data-act="dayb" data-i="${i}" aria-current="${S.screen === 'day' && S.day === i}"><span class="d" style="background:${DAY_COLORS[i % 8]}"></span>Day ${i + 1} · ${esc(d.city)}<small>${d.dn}</small></button>`).join('');
+  const side = `<aside class="b-side"><div class="b-brand">${PLANE}<span>Trip Tracker</span></div>
+    <nav class="b-nav">${link('home','🌏','Atlas')}<div class="h">Japan in Autumn</div><div class="b-nav b-days">${dayLinks}</div>
+      <span class="b-mob">${link('day','📋','Itinerary')}</span>${link('budget','💰','Budget')}</nav>
+    ${syncChip()}</aside>`;
+  let panel = '', mainArea = '';
+  const daySel = `<div class="b-daysel">${DAYS.map((d, i) => `<button type="button" class="chip" data-act="day" data-i="${i}" aria-pressed="${i === S.day}">Day ${i + 1}</button>`).join('')}</div>`;
+  if(S.screen === 'home'){
+    const byCountry = {};
+    TRIPS.filter(t => !t.upcoming).forEach(t => t.cities.forEach(c => { const k = CITIES[c][2]; (byCountry[k] = byCountry[k] || { cities:new Set(), when:t.dates.split(' ').slice(-1)[0] }).cities.add(c); }));
+    const next = st.next;
+    panel = `<p class="eyebrow">Atlas</p><h1>Places you've been</h1>
+      <p style="color:var(--muted)">${st.countries} countries · ${st.cities} cities · ${st.days} days away from home. Tap a city to find it on the map.</p>
+      <button type="button" class="b-upnext" data-act="trip" data-id="jp"><small>Next · in ${daysUntil(next.start)} days</small><b>${esc(next.name)}</b><span>${next.dates} · ${next.cities.join(', ')}</span></button>
+      ${Object.entries(byCountry).map(([k, o]) => `<div class="b-country"><h3>${esc(k)} <small>${o.when}</small></h3><div class="chips">${[...o.cities].map(c => `<button type="button" class="chip" data-act="hl" data-c="${esc(c)}" aria-pressed="${S.hlCity === c}">${esc(c)}</button>`).join('')}</div></div>`).join('')}`;
+    mainArea = `<div class="b-worldwrap">${worldMap({ look:'b', fit:true })}</div>`;
+  } else if(S.screen === 'day'){
+    const d = DAYS[S.day]; const items = numbered(d);
+    if(S.sheet === 'place'){
+      panel = `<div class="dialog-h"><div><p class="eyebrow">Day ${S.day + 1} · ${esc(d.city)}</p><h1>Add a place</h1></div><button type="button" class="x" data-act="close" aria-label="Back to the day">✕</button></div>
+        ${placeFormHTML()}<p style="color:var(--muted);font-size:.9688rem">The pin shows on the map as soon as the location is found.</p>
+        <div><button type="button" class="btn brass" data-act="addplace">Add to day</button></div>`;
+    } else {
+      panel = `${daySel}<div><p class="eyebrow">Day ${S.day + 1} · ${d.label}</p><h1>${esc(d.city)}</h1></div>
+        ${d.notes ? `<div class="notes">${esc(d.notes)}</div>` : ''}
+        <div>${d.times.map(t => `<div class="b-line"><span class="t">${t[0]}</span><span>${esc(t[1])}</span></div>`).join('')}</div>
+        <div><p class="b-sub">On the map</p>${items.map(x => `<div class="b-stop"><span class="n ${x.p.t === 'hotel' ? 'sq' : ''}" style="background:${x.p.t === 'hotel' ? '#101b2d' : x.p.t === 'flight' ? '#5c7a9c' : DAY_COLORS[S.day % 8]}">${x.n ?? (x.p.t === 'hotel' ? 'H' : '✈')}</span>
+          <div><b>${esc(x.p.name)}</b> <span style="font-size:.9375rem;color:var(--muted)">${x.p.t === 'flight' ? `${x.p.dep} → ${x.p.arr}` : x.p.t === 'hotel' ? x.p.span : ''}</span>${x.p.addr ? `<div class="addr">${esc(x.p.addr)}</div>` : ''}${x.p.note ? `<div style="margin-top:4px">${esc(x.p.note)}</div>` : ''}</div></div>`).join('')}</div>
+        <div><button type="button" class="btn" data-act="sheet" data-s="place">+ Add place</button></div>`;
+    }
+    const pin = currentParsedPin();
+    mainArea = `<div class="b-mapbar"><div class="seg"><button type="button" data-act="mapm" data-m="day" aria-pressed="${S.mapMode === 'day' || !!pin}">Day ${S.day + 1}</button><button type="button" data-act="mapm" data-m="trip" aria-pressed="${S.mapMode === 'trip' && !pin}">Whole trip</button></div></div>
+      <div id="bmap">${bMap()}</div>`;
+  } else {
+    const t = totals();
+    panel = `<p class="eyebrow">Budget</p><h1>Add an expense</h1>${expenseFormHTML()}`;
+    mainArea = `<div class="b-ledger"><div><p class="eyebrow">Japan in Autumn · spent so far</p><div class="total">${fmt('SGD', t.all)}</div><p style="color:var(--muted);font-size:.9688rem">In SGD · example rate S$1 = ¥115</p></div>
+      ${CATS.filter(c => t.by[c.k]).map(c => `<section class="b-group"><div class="b-group-h"><b><span class="catdot" style="width:12px;height:12px;border-radius:50%;background:${c.color};display:inline-block"></span>${c.ic} ${c.k}</b><span class="mono">${fmt('SGD', t.by[c.k])}</span></div>
+        ${S.expenses.filter(e => e.cat === c.k).map(e => `<div class="b-row"><div><b style="font-weight:700">${esc(e.desc)}</b><div class="brk">${esc(breakdown(e)) || dateShort(e.date)}</div></div><div class="r">${fmt(e.cur, expTotal(e))}${e.cur !== 'SGD' ? `<small>${fmt('SGD', toSGD(e.cur, expTotal(e)))}</small>` : ''}</div></div>`).join('')}</section>`).join('')}</div>`;
+  }
+  return `<div class="vB scr-${S.screen}">${side}<section class="b-panel">${panel}</section><section class="b-main">${mainArea}</section></div>`;
+}
+function bMap(){
+  const pin = currentParsedPin();
+  const keep = S.mapMode; if(pin) S.mapMode = 'day';
+  const el = document.querySelector('.b-main');
+  const asp = el && el.clientWidth && el.clientHeight ? el.clientWidth / el.clientHeight : 1.2;
+  const h = tripMap({ aspect: asp, look:'b', extra: pin }).replace('class="tripmap"', 'class="tripmap" ');
+  S.mapMode = keep; return h;
+}
+
+/* =========================================================
+   VARIANT C
+   ========================================================= */
+function C(){
+  const st = stats();
+  let head = '', body = '';
+  if(S.screen === 'home'){
+    const next = st.next;
+    const byYear = {};
+    TRIPS.filter(t => !t.upcoming).forEach(t => { const y = t.start.slice(0, 4); t.cities.forEach(c => (byYear[y] = byYear[y] || []).push({ c, t })); });
+    head = `<p class="eyebrow">Trip Tracker</p><h1>Your travels</h1>`;
+    body = `<section class="c-next"><p class="eyebrow">Next trip · in ${daysUntil(next.start)} days</p><h2>${esc(next.name)}</h2><p>${next.dates} · ${next.cities.join(', ')}</p><button type="button" class="btn" data-act="trip" data-id="jp">Open trip</button></section>
+      <section class="c-card"><h2 class="c-h2" style="margin-bottom:4px">${st.cities} cities in ${st.countries} countries</h2><p style="color:var(--muted);margin-bottom:12px">● been there &nbsp; ○ coming up &nbsp; ◆ home</p>${worldMap({ look:'c', fit:true })}</section>
+      <section><h2 class="c-h2">Cities you've been to</h2>
+        ${Object.keys(byYear).sort().reverse().map(y => `<p class="c-year">${y}</p>${byYear[y].map(o => `<div class="c-city"><b>${esc(o.c)}</b><span>${esc(CITIES[o.c][2])} · ${new Date(o.t.start).toLocaleDateString('en-GB', { month:'short' })}</span></div>`).join('')}`).join('')}</section>`;
+  } else if(S.screen === 'day'){
+    const d = DAYS[S.day]; const items = numbered(d);
+    head = `<p class="eyebrow">Japan in Autumn</p><h1>Day ${S.day + 1} · ${esc(d.city)}</h1>`;
+    const timed = d.times.map(t => ({ t:t[0], html:esc(t[1]) }));
+    d.places.filter(p => p.t === 'flight').forEach(p => { timed.push({ t:p.dep, html:`<span class="flight"><b>✈️ ${esc(p.name)}</b>Departs ${p.dep}, lands ${p.arr}</span>` }); });
+    timed.sort((a, b) => a.t.localeCompare(b.t));
+    const hotel = d.places.find(p => p.t === 'hotel');
+    body = `<div class="c-dates">${DAYS.map((dd, i) => `<button type="button" class="c-date" data-act="day" data-i="${i}" aria-current="${i === S.day}"><small>${dd.dow}</small><b>${dd.dn}</b></button>`).join('')}</div>
+      ${d.notes ? `<div class="notes">${esc(d.notes)}</div>` : ''}
+      <section class="c-map"><button type="button" class="c-maptoggle" data-act="cmap" aria-expanded="${!!S.cMap}"><span>🗺️ ${S.cMap ? 'Hide map' : 'Show today on the map'}</span><span>${S.cMap ? '▴' : '▾'}</span></button>${S.cMap ? tripMap({ aspect: 4/3, look:'c' }) : ''}</section>
+      ${timed.length ? `<section><h2 class="c-h2" style="margin-bottom:6px">Timings</h2><ul class="tl">${timed.map(x => `<li><span class="t">${x.t}</span><span>${x.html}</span></li>`).join('')}</ul></section>` : ''}
+      ${hotel ? `<div class="c-stay"><span class="ic">🏨</span><div><b>${esc(hotel.name)}</b><small>${esc(hotel.span)} · ${esc(hotel.addr)}</small></div></div>` : ''}
+      ${items.some(x => x.n) ? `<section><h2 class="c-h2">Places</h2>${items.filter(x => x.n).map(x => `<div class="c-place"><span class="n" style="background:${DAY_COLORS[S.day % 8]}">${x.n}</span><div><b>${esc(x.p.name)}</b> <span style="color:var(--muted);font-size:1rem">${placeIcon(x.p)}</span>${x.p.addr ? `<div class="addr">${esc(x.p.addr)}</div>` : ''}${x.p.note ? `<div class="note">${esc(x.p.note)}</div>` : ''}</div></div>`).join('')}</section>` : ''}
+      <button type="button" class="btn c-wide" data-act="sheet" data-s="place">+ Add a place</button>`;
+  } else {
+    const t = totals();
+    head = `<p class="eyebrow">Japan in Autumn</p><h1>Budget</h1>`;
+    body = `<section><p style="color:var(--muted)">Spent so far, in SGD</p><div class="c-total">${fmt('SGD', t.all)}</div></section>
+      <button type="button" class="btn brass c-wide" data-act="sheet" data-s="expense">+ Add an expense</button>
+      <section class="c-card">${CATS.filter(c => t.by[c.k]).map(c => `<div class="c-cat"><span>${c.ic} ${c.k}</span><span class="mono">${fmt('SGD', t.by[c.k])}</span><span class="track"><span class="fill" style="display:block;width:${(t.by[c.k] / t.all * 100).toFixed(1)}%;background:${c.color}"></span></span></div>`).join('')}</section>
+      <section><h2 class="c-h2">Expenses</h2>${S.expenses.map(e => `<div class="c-exp"><div><b>${esc(e.desc)}</b><div class="brk">${esc(breakdown(e)) || esc(e.cat)}</div></div><div class="r">${fmt(e.cur, expTotal(e))}${e.cur !== 'SGD' ? `<small>${fmt('SGD', toSGD(e.cur, expTotal(e)))}</small>` : ''}</div></div>`).join('')}</section>`;
+  }
+  let sheet = '';
+  if(S.sheet === 'place'){
+    sheet = `<div class="sheet-wrap" data-act="closebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Add a place"><span class="grab"></span>
+      <div class="sheet-h"><h2>Add a place</h2><button type="button" class="x" data-act="close" aria-label="Close">✕</button></div>
+      ${placeFormHTML()}<div id="sheetmap">${previewMapHTML('c')}</div>
+      <button type="button" class="btn brass c-wide" data-act="addplace">Add to day</button></div></div>`;
+  } else if(S.sheet === 'expense'){
+    const d = S.draft;
+    const inner = S.step === 1
+      ? `<p class="steps">Step 1 of 2 · What kind of expense?</p><div class="cattiles">${CATS.map(c => `<button type="button" class="cattile" data-act="catstep" data-c="${c.k}" aria-pressed="${d.cat === c.k}"><span class="ic">${c.ic}</span>${c.k}</button>`).join('')}</div>`
+      : `<p class="steps">Step 2 of 2 · ${catOf(d.cat).ic} ${d.cat} <button type="button" class="btn small ghost" data-act="step" data-s="1" style="margin-left:8px">Change</button></p>
+         <form class="form" data-form="exp" onsubmit="return false">
+         ${amountFields()}
+         ${calcHTML()}
+         <div class="grid2"><div class="field"><label for="fdesc">Description</label><input id="fdesc" class="inp" data-f="desc" value="${esc(d.desc)}" placeholder="${catOf(d.cat).mode === 'nights' ? 'Hotel name' : 'What was it?'}"></div>
+         <div class="field"><label for="fdate">Date</label><input id="fdate" type="date" class="inp" data-f="date" value="${esc(d.date)}"></div></div>
+         <button type="button" class="btn brass c-wide" data-act="saveexp">Add expense</button></form>`;
+    sheet = `<div class="sheet-wrap" data-act="closebg"><div class="sheet" role="dialog" aria-modal="true" aria-label="Add an expense"><span class="grab"></span>
+      <div class="sheet-h"><h2>Add an expense</h2><button type="button" class="x" data-act="close" aria-label="Close">✕</button></div>${inner}</div></div>`;
+  }
+  const tab = (k, ic, l) => `<button type="button" class="c-tab" data-act="nav" data-to="${k}" ${S.screen === k ? 'aria-current="page"' : ''}><span class="ic">${ic}</span>${l}</button>`;
+  return `<div class="vC"><div class="c-col"><header class="c-head">${head}${syncChip()}</header><main class="c-body">${body}</main></div>
+    <nav class="c-tabbar"><div class="in">${tab('home','🌏','Home')}${tab('day','📋','Trip')}${tab('budget','💰','Budget')}</div></nav>${sheet}</div>`;
+}
+
+/* ===== Switcher + render ===== */
+const VARIANTS = { a:{ fn:A, name:'Boarding pass, larger' }, b:{ fn:B, name:'Atlas: map first' }, c:{ fn:C, name:'Journal: one column' } };
+const KEYS = Object.keys(VARIANTS);
+const app = document.getElementById('app');
+function readHash(){ const m = (location.hash || '').match(/^#variant-([abc])$/); if(m) S.variant = m[1]; }
+function render(){
+  document.documentElement.style.setProperty('--scale', S.scale);
+  document.body.classList.toggle('c-active', S.variant === 'c');
+  app.innerHTML = VARIANTS[S.variant].fn();
+  if(S.variant === 'b' && S.screen === 'day'){ const m = document.getElementById('bmap'); if(m) m.innerHTML = bMap(); }
+  document.getElementById('vlabel').innerHTML = `${S.variant.toUpperCase()} <small>(${VARIANTS[S.variant].name})</small>`;
+  document.getElementById('szlabel').textContent = Math.round(S.scale * 100) + '%';
+  if(S.toast){ const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = S.toast; app.appendChild(t); }
+}
+let toastTimer;
+function toast(msg){ S.toast = msg; clearTimeout(toastTimer); toastTimer = setTimeout(() => { S.toast = null; const t = document.querySelector('.toast'); if(t) t.remove(); }, 2600); const old = document.querySelector('.toast'); if(old) old.remove(); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role','status'); t.textContent = msg; app.appendChild(t); }
+function setVariant(k){ S.variant = k; S.sheet = null; try{ history.replaceState(null, '', '#variant-' + k); }catch(e){ location.hash = 'variant-' + k; } render(); window.scrollTo(0, 0); }
+function cycle(dir){ const i = KEYS.indexOf(S.variant); setVariant(KEYS[(i + dir + KEYS.length) % KEYS.length]); }
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if(!el) return;
+  const a = el.dataset.act;
+  if(a === 'closebg' && e.target !== el) return;
+  switch(a){
+    case 'vprev': cycle(-1); return;
+    case 'vnext': cycle(1); return;
+    case 'szup': S.scale = Math.min(1.4, +(S.scale + .1).toFixed(1)); break;
+    case 'szdown': S.scale = Math.max(.8, +(S.scale - .1).toFixed(1)); break;
+    case 'nav': S.screen = el.dataset.to; S.sheet = null; window.scrollTo(0, 0); break;
+    case 'trip': if(el.dataset.id === 'jp'){ S.screen = 'day'; S.day = 0; window.scrollTo(0, 0); } else { toast('Opens that trip. Only Japan is filled in for the mockup.'); return; } break;
+    case 'day': S.day = +el.dataset.i; S.sheet = null; break;
+    case 'dayb': S.screen = 'day'; S.day = +el.dataset.i; S.sheet = null; break;
+    case 'mapm': S.mapMode = el.dataset.m; if(S.variant === 'b' && S.sheet === 'place') S.sheet = null; break;
+    case 'cmap': S.cMap = !S.cMap; break;
+    case 'sync': S.sync = { synced:'syncing', syncing:'offline', offline:'synced' }[S.sync]; break;
+    case 'sheet': S.sheet = el.dataset.s; S.step = 1; S.pday = null; break;
+    case 'close': case 'closebg': S.sheet = null; break;
+    case 'ptab': S.placeTab = el.dataset.t; break;
+    case 'ex': S.link = EXAMPLES[el.dataset.k]; break;
+    case 'pcat': S.placeCat = el.dataset.c; break;
+    case 'pick': S.picked = el.dataset.n; toast(`Selected ${el.dataset.n}`); return;
+    case 'addplace': addParsedPlace(); return;
+    case 'cat': S.draft.cat = el.dataset.c; break;
+    case 'catstep': S.draft.cat = el.dataset.c; S.step = 2; break;
+    case 'step': S.step = +el.dataset.s; break;
+    case 'saveexp': saveExpense(); return;
+    case 'hl': S.hlCity = S.hlCity === el.dataset.c ? null : el.dataset.c; break;
+    case 'toast': toast(el.dataset.m); return;
+    default: return;
+  }
+  render();
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if(t.dataset.f){
+    S.draft[t.dataset.f] = t.value;
+    const c = document.getElementById('calc'); if(c) c.outerHTML = calcHTML();
+  } else if(t.dataset.in === 'link'){
+    S.link = t.value;
+    const r = document.getElementById('linkres'); if(r) r.innerHTML = linkResultHTML();
+    const m = document.getElementById('sheetmap'); if(m) m.innerHTML = previewMapHTML(S.variant);
+    const bm = document.getElementById('bmap'); if(bm) bm.innerHTML = bMap();
+  } else if(t.dataset.in === 'q'){
+    S.q = t.value; const q = S.q.trim().toLowerCase();
+    const r = document.getElementById('searchres'); if(r) r.innerHTML = searchResHTML(q.length > 1 ? SEARCH_SAMPLE.filter(p => p.name.toLowerCase().includes(q)) : [], q);
+  } else if(t.dataset.in === 'pday'){ S.pday = t.value; }
+});
+document.addEventListener('change', e => { const t = e.target; if(t.dataset.f === 'cur'){ S.draft.cur = t.value; const c = document.getElementById('calc'); if(c) c.outerHTML = calcHTML(); } if(t.dataset.in === 'pday') S.pday = t.value; });
+document.addEventListener('keydown', e => {
+  if(e.target.closest('input, textarea, select, [contenteditable]')) return;
+  if(e.key === 'ArrowLeft') cycle(-1);
+  if(e.key === 'ArrowRight') cycle(1);
+  if(e.key === 'Escape' && S.sheet){ S.sheet = null; render(); }
+});
+window.addEventListener('hashchange', () => { readHash(); render(); });
+window.addEventListener('resize', () => { if(S.variant === 'b' && S.screen === 'day'){ const m = document.getElementById('bmap'); if(m) m.innerHTML = bMap(); } });
+readHash();
+render();
+</script>
+
+</body>
+</html>
