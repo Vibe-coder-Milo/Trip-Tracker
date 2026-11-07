@@ -594,6 +594,32 @@ input.input, select.input, .item-tools select { height: var(--control-h); paddin
   .item:has(.item-edit) > .item-main { grid-column: 1 / -1; }
 }
 
+/* ===== map column: wider, pinned beside the plan, as tall as the screen ===== */
+.it-grid { grid-template-columns: minmax(0, 11fr) minmax(0, 9fr); gap: var(--space-xl); }
+@media (min-width: 64.01rem) {
+  .mapcol { position: sticky; top: calc(var(--bar-h) + var(--space-md)); height: calc(100dvh - var(--bar-h) - var(--space-xl)); max-height: 60rem; overflow: auto; }
+  .mapcol > div:has(.tmapwrap) { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 20rem; }
+  .mapcol .tmapwrap { position: relative; flex: 1 1 auto; min-height: 20rem; }
+  .mapcol .tmapwrap .tripmap { position: absolute; inset: 0; aspect-ratio: auto !important; height: 100%; }
+}
+@media (max-width: 64rem) { .it-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ===== dark accents to compare: orange (default), bubblegum, signal lime, first light ===== */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"])[data-accent="pink"] { --color-accent: oklch(79% 0.15 350); --color-accent-strong: oklch(85% 0.12 350); --color-accent-ink: oklch(21% 0.05 350); --color-accent-wash: oklch(30% 0.075 350); --color-map-arc: oklch(79% 0.15 350 / 0.75); --cat-sight: oklch(73% 0.16 28); }
+  :root:not([data-theme="light"])[data-accent="lime"] { --color-accent: oklch(90% 0.2 126); --color-accent-strong: oklch(94% 0.17 126); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(30% 0.07 128); --color-map-arc: oklch(90% 0.2 126 / 0.7); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
+  :root:not([data-theme="light"])[data-accent="dawn"] { --color-accent: oklch(86% 0.075 42); --color-accent-strong: oklch(91% 0.06 45); --color-accent-ink: oklch(22% 0.03 40); --color-accent-wash: oklch(30% 0.04 40); --color-map-arc: oklch(86% 0.075 42 / 0.8); }
+}
+:root[data-theme="dark"][data-accent="pink"] { --color-accent: oklch(79% 0.15 350); --color-accent-strong: oklch(85% 0.12 350); --color-accent-ink: oklch(21% 0.05 350); --color-accent-wash: oklch(30% 0.075 350); --color-map-arc: oklch(79% 0.15 350 / 0.75); --cat-sight: oklch(73% 0.16 28); }
+:root[data-theme="dark"][data-accent="lime"] { --color-accent: oklch(90% 0.2 126); --color-accent-strong: oklch(94% 0.17 126); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(30% 0.07 128); --color-map-arc: oklch(90% 0.2 126 / 0.7); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
+:root[data-theme="dark"][data-accent="dawn"] { --color-accent: oklch(86% 0.075 42); --color-accent-strong: oklch(91% 0.06 45); --color-accent-ink: oklch(22% 0.03 40); --color-accent-wash: oklch(30% 0.04 40); --color-map-arc: oklch(86% 0.075 42 / 0.8); }
+.proto select { min-height: 36px; padding: 0 var(--space-xs); border: 1px solid var(--color-muted); border-radius: var(--radius-pill); background: transparent; color: var(--color-paper); font-size: var(--text-sm); }
+.proto select option { color: var(--color-ink); background: var(--color-paper); }
+.proto select:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 2px; }
+.maphint { font-size: var(--text-sm); }
+.accentpick { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.accentpick .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+
 /* ===== mockup control, not part of the design ===== */
 .proto { position: fixed; left: 50%; bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-tooltip); transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-xs); max-width: calc(100% - 24px); padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-md); border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-paper-3); font-size: var(--text-sm); box-shadow: var(--shadow-card); }
 .proto button { min-height: 36px; padding: 0 var(--space-sm); border: 1px solid var(--color-muted); border-radius: var(--radius-pill); background: transparent; color: var(--color-paper); font-size: var(--text-sm); white-space: nowrap; cursor: pointer; }
@@ -644,6 +670,7 @@ input.input, select.input, .item-tools select { height: var(--control-h); paddin
   <span class="sep" aria-hidden="true"></span>
   <button type="button" data-act="theme" data-v="light" id="pbLight">Light</button>
   <button type="button" data-act="theme" data-v="dark" id="pbDark">Dark</button>
+  <label class="visually-hidden" for="pbAccent">Dark mode colour</label><select id="pbAccent" data-in="accent"><option value="orange">Orange</option><option value="pink">Bubblegum</option><option value="lime">Signal lime</option><option value="dawn">First light</option></select>
 </div>
 <div class="visually-hidden" role="status" aria-live="polite" id="live"></div>
 
@@ -771,7 +798,7 @@ const S = {
   mapFocus:null, mapPopup:null, picking:null,
   addType:'activity', addCat:'attraction', addMode:'search', q:'', picked:null, link:'', addDay:null, hFrom:null, hTo:null, fName:'', fDep:'', fArr:'', addNote:'', wiki:null,
   draft:{ cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'' }, editing:null,
-  editDay:false, scrollDay:false, sTime:'', sWhat:'', theme:'auto', pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
+  editDay:false, scrollDay:false, sTime:'', sWhat:'', theme:'auto', accent:'orange', pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
 };
 
 /* ===== helpers ===== */
@@ -1080,12 +1107,11 @@ function mapAside(){
   const picking = S.picking ? findPlace(S.picking) : null;
   return `<aside class="mapcol box" aria-label="Map">
     <div class="seg" role="group" aria-label="Map shows"><button type="button" data-act="mapm" data-m="day" aria-pressed="${S.mapMode === 'day'}">This day</button><button type="button" data-act="mapm" data-m="trip" aria-pressed="${S.mapMode === 'trip'}">Whole trip</button></div>
-    <div>${picking ? `<div class="pickbar"><span>Tap the map where ${esc(picking.p.name)} is.</span><button type="button" class="btn" data-act="pickcancel">Cancel</button></div>` : ''}${tripMap({ filter, focus:S.mapFocus, picking:!!picking, curDay:i })}</div>
+    <div>${picking ? `<div class="pickbar"><span>Tap the map where ${esc(picking.p.name)} is.</span><button type="button" class="btn" data-act="pickcancel">Cancel</button></div>` : ''}<div class="tmapwrap">${(S.lastMap = { filter, focus:S.mapFocus, picking:!!picking, curDay:i }, tripMap(S.lastMap))}</div></div>
     <div class="field"><label for="findp">Find a place on the map</label><select id="findp" class="input" data-in="findplace"><option value="">Choose a place</option>${groups}</select></div>
     ${S.mapFocus ? `<div><button type="button" class="link" data-act="unfocus">Show the whole ${S.mapMode === 'trip' ? 'trip' : 'day'} again</button></div>` : ''}
-    ${popup || `<p class="sub">Tap a pin for its details. Hotels list every day they cover.${S.mapMode === 'trip' ? ' The whole trip shows every place; tap one to see which day it is on.' : ''}</p>`}
+    ${popup || `<p class="sub maphint">Tap a pin for its details.</p>`}
     ${unplaced.length ? `<div class="unplaced"><b>${unplaced.length === 1 ? 'One place is' : unplaced.length + ' places are'} not on the map yet</b>${unplaced.map(p => `<div class="r"><span>${esc(p.name)}</span><button type="button" class="btn" data-act="pick" data-id="${p.id}">Drop a pin</button></div>`).join('')}</div>` : ''}
-    <p class="sub">Mockup map. The real app keeps your Google or OpenStreetMap map.</p>
   </aside>`;
 }
 function nextUp(i){
@@ -1221,7 +1247,7 @@ function scrSettings(){
       <p class="state ${S.helperSet ? 'ok' : 'warn'}">${I(S.helperSet ? 'check' : 'alert','sm')}${S.helperSet ? 'Connected' : 'Not set up'}</p>
       <div class="chips"><button type="button" class="btn" data-act="helper">${S.helperSet ? 'Disconnect (mockup)' : 'Connect (mockup)'}</button><button type="button" class="btn btn--quiet" data-act="toast" data-m="Shows the setup steps in the real app.">Setup steps</button></div></section>
     <section class="set box" aria-labelledby="h-look"><h2 id="h-look">Appearance</h2><p>Match the iPad follows its Light and Dark setting, so the app turns dark in the evening by itself.</p>
-      <div class="seg" role="group" aria-label="Appearance"><button type="button" data-act="theme" data-v="auto" aria-pressed="${S.theme === 'auto'}">Match the iPad</button><button type="button" data-act="theme" data-v="light" aria-pressed="${S.theme === 'light'}">Light</button><button type="button" data-act="theme" data-v="dark" aria-pressed="${S.theme === 'dark'}">Dark</button></div></section>
+      <div class="seg" role="group" aria-label="Appearance"><button type="button" data-act="theme" data-v="auto" aria-pressed="${S.theme === 'auto'}">Match the iPad</button><button type="button" data-act="theme" data-v="light" aria-pressed="${S.theme === 'light'}">Light</button><button type="button" data-act="theme" data-v="dark" aria-pressed="${S.theme === 'dark'}">Dark</button></div><h3 style="margin-top:var(--space-sm)">Colour in dark mode</h3><div class="seg accentpick" role="group" aria-label="Colour in dark mode">${[['orange','Orange','oklch(76% 0.15 58)'],['pink','Bubblegum','oklch(79% 0.15 350)'],['lime','Signal lime','oklch(90% 0.2 126)'],['dawn','First light','oklch(86% 0.075 42)']].map(([v, l, c]) => `<button type="button" data-act="accent" data-v="${v}" aria-pressed="${S.accent === v}"><span class="swatch" style="background:${c}"></span>${l}</button>`).join('')}</div></section>
     <section class="set box" aria-labelledby="h-size"><h2 id="h-size">Text size on this device</h2><p>The iPad and the computer each keep their own size.</p>
       <div class="chips" style="align-items:center"><button type="button" class="btn" data-act="sz" data-d="-1" aria-label="Smaller text">Smaller</button><span class="num" style="min-width:4rem;text-align:center">${Math.round(S.scale * 100)}%</span><button type="button" class="btn" data-act="sz" data-d="1" aria-label="Larger text">Larger</button></div></section>
     <section class="set box" aria-labelledby="h-bk"><h2 id="h-bk">Backups</h2><p>Sync keeps every version, and a file in Google Drive is a second copy you control.</p>
@@ -1258,6 +1284,13 @@ function pastCheckHTML(cs){
 
 /* ===== render ===== */
 const app = document.getElementById('app');
+function isDark(){ return S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches); }
+function fitMap(){
+  const w = document.querySelector('.mapcol .tmapwrap'); if(!w || !S.lastMap) return;
+  if(getComputedStyle(w).position !== 'relative' || !w.clientHeight) return;
+  w.innerHTML = tripMap({ ...S.lastMap, aspect: w.clientWidth / w.clientHeight });
+}
+window.addEventListener('resize', () => { clearTimeout(fitMap.t); fitMap.t = setTimeout(fitMap, 120); });
 function render(){
   document.documentElement.style.setProperty('--scale', S.scale);
   const scr = { home:scrHome, overview:scrOverview, itinerary:scrItinerary, budget:scrBudget, settings:scrSettings }[S.screen]();
@@ -1265,8 +1298,11 @@ function render(){
   document.getElementById('pbBefore').setAttribute('aria-pressed', S.pretend === 'before');
   document.getElementById('pbDuring').setAttribute('aria-pressed', S.pretend === 'during');
   if(S.theme === 'auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', S.theme);
+  if(S.accent === 'orange') document.documentElement.removeAttribute('data-accent'); else document.documentElement.setAttribute('data-accent', S.accent);
+  document.getElementById('pbAccent').value = S.accent;
   const dark = S.theme === 'dark' || (S.theme === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
   document.getElementById('pbLight').setAttribute('aria-pressed', !dark); document.getElementById('pbDark').setAttribute('aria-pressed', dark);
+  fitMap();
   if(S.scrollDay){ S.scrollDay = false; const ds = document.querySelector('.daystrip'); if(ds && ds.getBoundingClientRect().top < 0) ds.scrollIntoView({ block:'start' }); }
   if(S.dialog){ const f = document.querySelector('.dialog input, .dialog select, .dialog textarea, .dialog button:not([data-act="close"])'); if(f && !document.querySelector('.dialog').contains(document.activeElement)) f.focus({ preventScroll:true }); }
 }
@@ -1322,6 +1358,7 @@ document.addEventListener('click', e => {
     case 'savetoken': S.sync = 'synced'; S.dialog = null; announce('Token saved on this device, sync running'); break;
     case 'helper': S.helperSet = !S.helperSet; break;
     case 'theme': S.theme = el.dataset.v; break;
+    case 'accent': S.accent = el.dataset.v; if(!isDark()) S.theme = 'dark'; break;
     case 'showkey': S.showKey = !S.showKey; break;
     case 'sz': S.scale = Math.max(.8, Math.min(1.5, +(S.scale + .1 * el.dataset.d).toFixed(1))); break;
     case 'toast': toast(el.dataset.m); return;
@@ -1421,6 +1458,7 @@ document.addEventListener('change', e => {
     case 'hto': S.hTo = +t.value; break;
     case 'lcur': TRIP.localCur = t.value; S.draft.cur = t.value; render(); break;
     case 'bcur': changeBase(t.value); render(); break;
+    case 'accent': S.accent = t.value; if(!isDark()) S.theme = 'dark'; render(); break;
     default: if(t.dataset.rate){ const v = parseFloat(t.value); if(v > 0) TRIP.rates[t.dataset.rate] = v; else delete TRIP.rates[t.dataset.rate]; render(); } break;
     case 'findplace': S.mapFocus = t.value || null; S.mapPopup = t.value || null; render(); break;
     case 'movestep': { const from = TRIP.days[S.day]; const [x] = from.times.splice(+t.dataset.k, 1); TRIP.days[+t.value].times.push(x); S.editTime = null; announce(`Moved ${x.d} to Day ${+t.value + 1}`); render(); } break;
