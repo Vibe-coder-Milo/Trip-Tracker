@@ -56,6 +56,7 @@
   --section-shadow: 0 1px 2px oklch(25% 0.02 255 / 0.05), 0 4px 14px -6px oklch(25% 0.02 255 / 0.12);
   --nextup-bg: var(--color-ink); --nextup-fg: var(--color-paper); --nextup-sub: var(--color-paper-3); --nextup-edge: var(--color-ink);
   --color-bar: oklch(99.9% 0.002 235);
+  --color-now: var(--color-accent);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   color-scheme: dark;
@@ -166,7 +167,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .tabs { display: flex; gap: var(--space-lg); flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .tab { position: relative; display: inline-flex; align-items: center; gap: var(--space-xs); min-height: var(--bar-h); padding: 0; border: 0; background: none; color: var(--color-muted); font-size: var(--text-md); white-space: nowrap; cursor: pointer; transition: color var(--dur-short) var(--ease-out); }
 .tab[aria-current="page"] { color: var(--color-ink); box-shadow: inset 0 -2px 0 var(--color-accent); }
-.tab .today { font-size: var(--text-xs); padding: 0 var(--space-xs); border-radius: var(--radius-pill); background: var(--color-accent); color: var(--color-accent-ink); }
+.tab .today { font-size: var(--text-xs); padding: 0 var(--space-xs); border-radius: var(--radius-pill); background: var(--color-now); color: var(--color-accent-ink); }
 .bar-right { display: flex; align-items: center; gap: var(--space-xs); }
 .syncbtn { display: inline-flex; align-items: center; gap: var(--space-xs); min-height: 44px; padding: 0 var(--space-sm); border: 0; border-radius: var(--radius-pill); background: none; color: var(--color-muted); font-size: var(--text-sm); white-space: nowrap; cursor: pointer; }
 .syncbtn:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
@@ -217,9 +218,9 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .world svg { width: 100%; height: auto; }
 .wm-land { fill: var(--color-map-land); stroke: var(--color-map-edge); stroke-width: 0.6; vector-effect: non-scaling-stroke; }
 .wm-arc { fill: none; stroke: var(--color-map-arc); stroke-width: 1.2; vector-effect: non-scaling-stroke; }
-.wm-arc.up { stroke: var(--color-accent); stroke-width: 2; stroke-dasharray: 5 4; }
+.wm-arc.up { stroke: var(--color-now); stroke-width: 2; stroke-dasharray: 5 4; }
 .wm-dot { fill: var(--color-ink); stroke: var(--color-map-land); stroke-width: 1.5; vector-effect: non-scaling-stroke; cursor: pointer; }
-.wm-ring { fill: var(--color-accent-wash); stroke: var(--color-accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; cursor: pointer; }
+.wm-ring { fill: var(--color-accent-wash); stroke: var(--color-now); stroke-width: 2.5; vector-effect: non-scaling-stroke; cursor: pointer; }
 .wm-home { fill: var(--color-cat-sight, var(--cat-sight)); }
 .wm-lab { position: absolute; transform: translate(10px, -50%); font-size: var(--text-sm); line-height: 1.1; color: var(--color-ink); white-space: nowrap; pointer-events: none; text-shadow: 0 0 3px var(--color-map-sea), 0 0 2px var(--color-map-sea); }
 .wm-lab.l { transform: translate(calc(-100% - 10px), -50%); }
@@ -496,6 +497,8 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .mapcol.box { gap: var(--space-md); }
 .mapcol .tripmap { border: 0; border-radius: 8px; }
 .nextup { background: var(--nextup-bg); color: var(--nextup-fg); border: 1px solid var(--nextup-edge); }
+:root[data-accent="lime"] .nextup { border: 2px solid var(--color-now); }
+.daytab[aria-current="true"] b:is(:first-child) { color: var(--color-ink); }
 .nextup .t, .nextup .what b { color: var(--nextup-fg); } .nextup .what span { color: var(--nextup-sub); }
 .nextup .btn { border-color: var(--nextup-sub); color: var(--nextup-fg); }
 @media (hover: hover) { .nextup .btn:hover:not(:disabled) { background: var(--nextup-fg); color: var(--nextup-bg); } }
@@ -607,11 +610,11 @@ input.input, select.input, .item-tools select { height: var(--control-h); paddin
 /* ===== dark accents to compare: signal lime (default), bubblegum, signal lime, first light ===== */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"])[data-accent="pink"] { --color-accent: oklch(79% 0.15 350); --color-accent-strong: oklch(85% 0.12 350); --color-accent-ink: oklch(21% 0.05 350); --color-accent-wash: oklch(30% 0.075 350); --color-map-arc: oklch(79% 0.15 350 / 0.75); --cat-sight: oklch(73% 0.16 28); }
-  :root:not([data-theme="light"])[data-accent="lime"] { --color-accent: oklch(90% 0.2 126); --color-accent-strong: oklch(94% 0.17 126); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(30% 0.07 128); --color-map-arc: oklch(90% 0.2 126 / 0.7); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
+  :root:not([data-theme="light"])[data-accent="lime"] { --color-accent: oklch(85% 0.17 127); --color-accent-strong: oklch(90% 0.15 127); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(24% 0.03 127); --color-map-arc: oklch(85% 0.17 127 / 0.7); --color-now: oklch(90% 0.2 126); --color-success: oklch(78% 0.1 185); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
   :root:not([data-theme="light"])[data-accent="dawn"] { --color-accent: oklch(86% 0.075 42); --color-accent-strong: oklch(91% 0.06 45); --color-accent-ink: oklch(22% 0.03 40); --color-accent-wash: oklch(30% 0.04 40); --color-map-arc: oklch(86% 0.075 42 / 0.8); }
 }
 :root[data-theme="dark"][data-accent="pink"] { --color-accent: oklch(79% 0.15 350); --color-accent-strong: oklch(85% 0.12 350); --color-accent-ink: oklch(21% 0.05 350); --color-accent-wash: oklch(30% 0.075 350); --color-map-arc: oklch(79% 0.15 350 / 0.75); --cat-sight: oklch(73% 0.16 28); }
-:root[data-theme="dark"][data-accent="lime"] { --color-accent: oklch(90% 0.2 126); --color-accent-strong: oklch(94% 0.17 126); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(30% 0.07 128); --color-map-arc: oklch(90% 0.2 126 / 0.7); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
+:root[data-theme="dark"][data-accent="lime"] { --color-accent: oklch(85% 0.17 127); --color-accent-strong: oklch(90% 0.15 127); --color-accent-ink: oklch(22% 0.05 130); --color-accent-wash: oklch(24% 0.03 127); --color-map-arc: oklch(85% 0.17 127 / 0.7); --color-now: oklch(90% 0.2 126); --color-success: oklch(78% 0.1 185); --cat-food: oklch(80% 0.14 68); --cat-transport: oklch(76% 0.11 180); }
 :root[data-theme="dark"][data-accent="dawn"] { --color-accent: oklch(86% 0.075 42); --color-accent-strong: oklch(91% 0.06 45); --color-accent-ink: oklch(22% 0.03 40); --color-accent-wash: oklch(30% 0.04 40); --color-map-arc: oklch(86% 0.075 42 / 0.8); }
 .proto select { min-height: 36px; padding: 0 var(--space-xs); border: 1px solid var(--color-muted); border-radius: var(--radius-pill); background: transparent; color: var(--color-paper); font-size: var(--text-sm); }
 .proto select option { color: var(--color-ink); background: var(--color-paper); }
@@ -621,6 +624,17 @@ input.input, select.input, .item-tools select { height: var(--control-h); paddin
 .accentpick { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 .accentpick button { gap: var(--space-xs); }
 .accentpick .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+
+/* ===== day moves and handles ===== */
+.daymove { min-height: 36px; padding: 0 var(--space-sm); font-size: var(--text-sm); justify-content: flex-start; }
+.ov-move { gap: var(--space-xs); margin-top: 0; }
+.handle::before { inset: auto; left: 50%; top: 50%; width: 44px; height: 44px; transform: translate(-50%, -50%); }
+
+.nextup { grid-template-columns: auto minmax(0, 1fr); }
+.nextup .btn { grid-column: 1 / -1; justify-self: start; }
+.ov-when b, .ov-when span { white-space: nowrap; }
+@media (max-width: 40rem) { .daymove .lbl { display: none; } .daymove { width: 44px; min-height: 44px; padding: 0; justify-content: center; } }
+.proto { overflow-x: auto; scrollbar-width: none; }
 
 /* ===== mockup control, not part of the design ===== */
 .proto { position: fixed; left: 50%; bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-tooltip); transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-xs); max-width: calc(100% - 24px); padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-md); border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-paper-3); font-size: var(--text-sm); box-shadow: var(--shadow-card); }
@@ -1042,7 +1056,7 @@ function scrOverview(){
     const plan = planOf(d);
     const rows = plan.map(e => {
       if(e.kind === 'divider') return '<li class="anytime">Any time</li>';
-      const grip = (what, idx, name) => `<button type="button" class="handle" data-drag="ov" data-what="${what}" data-day="${i}" data-idx="${idx}" aria-label="Drag ${esc(name)} to reorder or move">${I('grip')}</button>`;
+      const grip = (what, idx, name) => `<button type="button" class="handle" data-drag="ov" data-what="${what}" data-day="${i}" data-idx="${idx}" aria-label="Move ${esc(name)}: drag, or use arrow keys (up and down within the day, left and right to another day)">${I('grip')}</button>`;
       if(e.kind === 'place'){ const p = e.p; return `<li class="ovrow" data-row="p:${i}:${e.pi}"><span class="pt">${e.t || ''}</span>${grip('p', e.pi, p.name)}<span class="badge c-${p.category}">${e.n}</span><div class="ovtext"><b><span class="cat-ic c-${p.category}">${I(placeIcon(p),'sm')}</span>${esc(p.name)}</b>${p.note ? `<span class="ovnote">${esc(p.note)}</span>` : ''}</div></li>`; }
       if(e.kind === 'step') return `<li class="ovrow" data-row="s:${i}:${e.k}"><span class="pt">${e.t || ''}</span>${grip('s', e.k, e.d)}<span class="badge c-${e.sk}">${e.n}</span><div class="ovtext"><b><span class="cat-ic c-${e.sk}">${I(STEPIC[e.sk],'sm')}</span>${esc(e.d)}</b></div></li>`;
       return `<li class="ovrow" data-row="f:${i}:${e.pi}"><span class="pt">${e.t || ''}</span><span></span><span class="badge c-air">${e.n}</span><div class="ovtext"><b><span class="cat-ic c-air">${I('plane','sm')}</span>${esc(e.p.name)}</b><span class="ovnote">${e.t === e.p.arr ? 'Lands' : 'Departs'} ${e.t}${e.p.note ? '. ' + esc(e.p.note) : ''}</span></div></li>`;
@@ -1055,7 +1069,8 @@ function scrOverview(){
         ${d.notes ? `<p class="ovdaynote">${esc(d.notes)}</p>` : ''}
         ${plan.length ? `<ol class="ovplan">${rows}</ol>` : '<p class="sub">Nothing planned yet. Drop a place here from another day.</p>'}
       </div>
-      <div class="ov-move"><button type="button" class="iconbtn" data-act="moveday" data-i="${i}" data-d="-1" aria-label="Move Day ${i + 1} earlier" ${i === 0 ? 'disabled' : ''}>${I('up')}</button><button type="button" class="iconbtn" data-act="moveday" data-i="${i}" data-d="1" aria-label="Move Day ${i + 1} later" ${i === TRIP.days.length - 1 ? 'disabled' : ''}>${I('down')}</button></div>
+      <div class="ov-move"><button type="button" class="btn btn--quiet daymove" data-act="moveday" data-i="${i}" data-d="-1" aria-label="Move Day ${i + 1} earlier" ${i === 0 ? 'disabled' : ''}>${I('up','sm')}<span class="lbl">Earlier</span></button><button type="button" class="btn btn--quiet daymove" data-act="moveday" data-i="${i}" data-d="1" aria-label="Move Day ${i + 1} later" ${i === TRIP.days.length - 1 ? 'disabled' : ''}>${I('down','sm')}<span class="lbl">Later</span></button></div>
+
     </li>`;
   }).join('');
   return `<div class="screen">${syncBanner()}${pageHead()}
@@ -1065,7 +1080,7 @@ function scrOverview(){
     </section>
     <section aria-labelledby="h-days"><div class="sechead"><h2 id="h-days">Day by day</h2><button type="button" class="btn btn--quiet" data-act="toast" data-m="Opens the print dialog so you can save this overview as a PDF in the real app.">${I('print','sm')}Save as PDF</button></div>
       <div class="ovkey"><ul class="legend" aria-label="Key">${[['attraction','pin','Sight'],['food','bowl','Food'],['activity','flag','Activity'],['transport','train','Transport'],['air','plane','Flight'],['hotel','bed','Hotel']].map(([c, ic, l]) => `<li><span class="keydot c-${c}"></span><span class="cat-ic c-${c}">${I(ic,'sm')}</span>${l}</li>`).join('')}</ul>
-      <p class="sub">Drag a stop by its handle to move it to another day. The arrows swap whole days; the dates stay in order.</p></div>
+      <p class="sub">Drag a stop by its handle to move it to another day, or select the handle and use the arrow keys. Earlier and Later swap whole days; the dates stay in order.</p></div>
       <ol class="daylist">${days}</ol></section></div>`;
 }
 
@@ -1081,7 +1096,7 @@ function itemHTML(p, i, pi, nums, t = null, n = null){
   const timeField = p.type === 'activity' ? `<div class="field" style="max-width:12rem"><label for="pt${p.id}">Time (optional)</label><input id="pt${p.id}" type="time" class="input num" data-in="ptime" data-id="${p.id}" value="${p.time || ''}"></div>` : '';
   const edit = editing ? `<div class="item-edit">${timeField}<div class="field"><label for="nt${p.id}">${p.type === 'flight' ? 'Booking details' : 'Note'}</label><textarea id="nt${p.id}" class="input" rows="2" data-in="pnote" data-id="${p.id}" placeholder="${p.type === 'flight' ? 'Booking reference, seats, terminal' : 'Why you picked it, what to order'}">${esc(p.note)}</textarea></div>${move}<div><button type="button" class="btn" data-act="doneitem">Done</button></div></div>` : '';
   return `<li class="item ${timed ? 'timed' : ''}" ${p.type === 'activity' ? `data-drag-item="p:${i}:${pi}"` : ''}>
-    ${timed ? `<span class="pt">${t || ''}</span>` : ''}${p.type === 'activity' ? `<button type="button" class="handle" data-drag="it" data-what="p" data-day="${i}" data-idx="${pi}" aria-label="Drag ${esc(p.name)} to reorder">${I('grip')}</button>` : '<span></span>'}${badge}
+    ${timed ? `<span class="pt">${t || ''}</span>` : ''}${p.type === 'activity' ? `<button type="button" class="handle" data-drag="it" data-what="p" data-day="${i}" data-idx="${pi}" aria-label="Move ${esc(p.name)}: drag, or use arrow keys">${I('grip')}</button>` : '<span></span>'}${badge}
     <div class="item-main"><div class="item-name">${n != null ? `<span class="cat-ic ${cls}">${I(placeIcon(p),'sm')}</span>` : ''}${esc(p.name)}</div>${sub ? `<div class="item-sub">${esc(sub)}</div>` : ''}
       ${p.note && !editing ? `<p class="item-note">${esc(p.note)}</p>` : ''}
       ${noPin ? `<div class="nomap">${I('alert','sm')}Not on the map yet. <button type="button" class="link" data-act="pick" data-id="${p.id}">Drop a pin</button></div>` : ''}${edit}</div>
@@ -1089,7 +1104,7 @@ function itemHTML(p, i, pi, nums, t = null, n = null){
 }
 function stepHTML(e, i){
   const k = e.k; const t = TRIP.days[i].times[k]; const sk = t.kind || 'transport';
-  const grip = `<button type="button" class="handle" data-drag="it" data-what="s" data-day="${i}" data-idx="${k}" aria-label="Drag ${esc(t.d || 'this step')} to reorder">${I('grip')}</button>`;
+  const grip = `<button type="button" class="handle" data-drag="it" data-what="s" data-day="${i}" data-idx="${k}" aria-label="Move ${esc(t.d || 'this step')}: drag, or use arrow keys">${I('grip')}</button>`;
   const move = `<div class="item-tools"><label for="ms${i}-${k}">Move to</label><select id="ms${i}-${k}" data-in="movestep" data-k="${k}">${TRIP.days.map((d, j) => `<option value="${j}" ${j === i ? 'selected' : ''}>Day ${j + 1}, ${esc(d.city)}</option>`).join('')}</select></div>`;
   if(S.editTime === k) return `<li class="item timed step editing" data-drag-item="s:${i}:${k}"><span class="pt">${t.t || ''}</span>${grip}<span class="badge c-${sk}">${e.n}</span>
     <div class="item-main"><div class="item-name"><span class="cat-ic c-${sk}">${I(STEPIC[sk],'sm')}</span>${esc(t.d) || 'New step'}</div><div class="item-edit"><div class="seg" role="group" aria-label="Kind of step"><button type="button" data-act="stepkind" data-k="${k}" data-v="activity" aria-pressed="${sk === 'activity'}">Activity</button><button type="button" data-act="stepkind" data-k="${k}" data-v="transport" aria-pressed="${sk === 'transport'}">Transport</button></div><div class="field" style="max-width:12rem"><label for="tt${k}">Time</label><input id="tt${k}" type="time" class="input num" data-in="ttime" data-k="${k}" value="${t.t}"></div>
@@ -1468,7 +1483,26 @@ document.addEventListener('change', e => {
   }
 });
 document.addEventListener('toggle', e => { if(e.target.dataset && e.target.dataset.tg === 'details') S.openDetails = e.target.open; }, true);
-document.addEventListener('keydown', e => { if(e.key === 'Escape' && (S.dialog || S.picking)){ S.dialog = null; S.picking = null; render(); } });
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && (S.dialog || S.picking)){ S.dialog = null; S.picking = null; render(); return; }
+  const h = e.target.closest && e.target.closest('.handle[data-drag]');
+  if(!h || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+  e.preventDefault();
+  const what = h.dataset.what || 'p', day = +h.dataset.day, idx = +h.dataset.idx, key = what === 's' ? 'times' : 'places';
+  const arr = TRIP.days[day][key]; let toDay = day, toIdx;
+  if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+    const step = e.key === 'ArrowUp' ? -1 : 1; let j = idx + step;
+    while(j >= 0 && j < arr.length && what === 'p' && arr[j].type !== 'activity') j += step;
+    if(j < 0 || j >= arr.length) return;
+    toIdx = step < 0 ? j : j + 1;
+  } else {
+    toDay = day + (e.key === 'ArrowLeft' ? -1 : 1); if(toDay < 0 || toDay >= TRIP.days.length) return; toIdx = null;
+  }
+  const finalIdx = toDay === day ? (toIdx > idx ? toIdx - 1 : toIdx) : TRIP.days[toDay][key].length;
+  moveItem(what, day, idx, toDay, toIdx);
+  const sel = `.handle[data-drag="${h.dataset.drag}"][data-what="${what}"][data-day="${toDay}"][data-idx="${finalIdx}"]`;
+  document.querySelector(sel)?.focus();
+});
 
 /* ===== drag and drop (touch and mouse) ===== */
 let drag = null;
