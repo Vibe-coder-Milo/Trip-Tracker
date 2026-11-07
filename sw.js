@@ -32,7 +32,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => { if(res.ok || res.type === 'opaque'){ const copy = res.clone(); caches.open(LIBS).then(c => c.put(req, copy)); } return res; })));
     return;
   }
-  if(url.hostname.endsWith('basemaps.cartocdn.com')){
+  if(url.hostname.endsWith('basemaps.cartocdn.com') || url.hostname === 'tile.openstreetmap.org'){
     e.respondWith(caches.open(TILES).then(c => c.match(req).then(hit => {
       const net = fetch(req).then(res => { if(res.ok || res.type === 'opaque'){ c.put(req, res.clone()); trimTiles(); } return res; }).catch(() => hit);
       return hit || net;
