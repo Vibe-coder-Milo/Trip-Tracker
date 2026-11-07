@@ -617,6 +617,7 @@ input.input, select.input, .item-tools select { height: var(--control-h); paddin
 .proto select option { color: var(--color-ink); background: var(--color-paper); }
 .proto select:focus-visible { outline: 2px solid var(--color-paper); outline-offset: 2px; }
 .maphint { font-size: var(--text-sm); }
+@media (min-width: 40.01rem) { .item:has(.item-edit) > .item-main { grid-column: 4 / -1; } .item:has(.item-edit) > .item-acts { display: none; } }
 .accentpick { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
 .accentpick .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
 
