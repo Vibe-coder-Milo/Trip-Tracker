@@ -543,6 +543,57 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .addtypes { flex-wrap: wrap; }
 .addtypes button { display: inline-flex; align-items: center; gap: var(--space-2xs); }
 
+/* ===== alignment pass: one row geometry, one control height ===== */
+:root { --control-h: 44px; --row-time: 3.5rem; --row-handle: 28px; --row-badge: 32px; --row-gap: var(--space-sm); --row-lane: var(--control-h); }
+/* plan rows and stay rows share one grid; every cell centres on the 44px control lane */
+.item, .item.timed { grid-template-columns: var(--row-time) var(--row-handle) var(--row-badge) minmax(0, 1fr) calc(var(--control-h) * 2 + 4px); column-gap: var(--row-gap); }
+.item:not(.timed) > :first-child { grid-column: 2; }
+.item > .pt { padding-top: calc((var(--row-lane) - 1lh) / 2); }
+.item .handle { height: var(--row-lane); }
+.item .badge { width: var(--row-badge); height: var(--row-badge); margin-top: calc((var(--row-lane) - var(--row-badge)) / 2); }
+.item-name { flex-wrap: nowrap; align-items: flex-start; margin-top: calc((var(--row-lane) - 1lh) / 2); }
+.item-acts { justify-content: flex-end; }
+.item-name > .cat-ic, .ovtext b > .cat-ic, .facts li > .cat-ic { display: flex; align-items: center; height: 1lh; }
+.ovtext b, .facts li { align-items: flex-start; }
+/* details start where the name text starts, not under the icon */
+.item-main:has(> .item-name > .cat-ic) > :is(.item-sub, .item-note, .nomap) { padding-left: 24px; }
+.ovtext:has(> b > .cat-ic) > .ovnote { padding-left: 24px; }
+/* overview rows use the same columns, on a 32px lane */
+.ovrow { grid-template-columns: var(--row-time) var(--row-handle) var(--row-badge) minmax(0, 1fr); column-gap: var(--row-gap); }
+.ovrow .badge { width: var(--row-badge); height: var(--row-badge); margin-top: 0; }
+.ovrow .handle { height: var(--row-badge); }
+.ovrow .pt, .ovtext { padding-top: calc((var(--row-badge) - 1lh) / 2); }
+.ov-move { margin-top: -6px; }
+/* one control height */
+input.input, select.input, .item-tools select { height: var(--control-h); padding-block: 0; }
+.item-tools select { max-width: 100%; }
+.seg button { min-height: 40px; }
+/* editor panels */
+.item-edit .seg { align-self: flex-start; background: var(--color-paper-3); }
+.item-edit .item-tools { flex-direction: column; align-items: flex-start; gap: var(--space-2xs); margin-top: 0; }
+.item-edit .item-tools label { color: var(--color-muted); font-size: var(--text-sm); }
+/* edges */
+.daytab:first-child { padding-left: 0; }
+.bud-top > .panel { padding: var(--space-lg); }
+/* hierarchy: the day leads on Itinerary, the trip name steps back */
+.it-screen .titleinput { font-size: var(--text-2xl); }
+.it-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+@media (max-width: 64rem) { .it-grid { grid-template-columns: minmax(0, 1fr); } }
+.dayhead .daynote { margin-top: var(--space-sm); padding: 0; background: none; border: 0; max-width: 60ch; color: var(--color-ink-2); }
+/* iPad portrait and phone: overview days stack, arrows sit beside the day label */
+@media (max-width: 52rem) {
+  .ov-day { grid-template-columns: minmax(0, 1fr) auto; }
+  .ov-when { grid-column: 1; flex-direction: row; align-items: baseline; gap: var(--space-sm); padding-right: 0; border-right: 0; }
+  .ov-move { grid-column: 2; grid-row: 1; flex-direction: row; margin-top: -10px; }
+  .ov-body { grid-column: 1 / -1; }
+}
+@media (max-width: 40rem) {
+  :root { --row-time: 2.75rem; --row-handle: 22px; --row-gap: var(--space-xs); }
+  .item, .item.timed { grid-template-columns: var(--row-time) var(--row-handle) var(--row-badge) minmax(0, 1fr); }
+  .item .item-acts, .item.timed .item-acts { grid-column: 4; justify-content: flex-start; margin-left: -10px; }
+  .item:has(.item-edit) > .item-main { grid-column: 1 / -1; }
+}
+
 /* ===== mockup control, not part of the design ===== */
 .proto { position: fixed; left: 50%; bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-tooltip); transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-xs); max-width: calc(100% - 24px); padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-md); border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-paper-3); font-size: var(--text-sm); box-shadow: var(--shadow-card); }
 .proto button { min-height: 36px; padding: 0 var(--space-sm); border: 1px solid var(--color-muted); border-radius: var(--radius-pill); background: transparent; color: var(--color-paper); font-size: var(--text-sm); white-space: nowrap; cursor: pointer; }
@@ -1055,12 +1106,12 @@ function scrItinerary(){
       <div class="field"><label for="dcity">Town for today</label><input id="dcity" class="input" data-in="dcity" value="${esc(d.city)}" placeholder="For example, Shantou" aria-describedby="dcity-help"><span class="help" id="dcity-help">Used to search for places nearby</span></div></div>
       <div class="field"><label for="dnotes">Day note</label><textarea id="dnotes" class="input" rows="2" data-in="dnotes" placeholder="Anything to remember for the whole day">${esc(d.notes)}</textarea></div>
       <div class="dayactions"><button type="button" class="btn btn--quiet" data-act="moveday" data-i="${i}" data-d="-1" ${i === 0 ? 'disabled' : ''}>${I('left','sm')}Move day earlier</button><button type="button" class="btn btn--quiet" data-act="moveday" data-i="${i}" data-d="1" ${i === TRIP.days.length - 1 ? 'disabled' : ''}>Move day later${I('right','sm')}</button><button type="button" class="btn btn--danger" data-act="askdelday">Delete Day ${i + 1}</button></div></section>`
-    : (d.notes ? `<p class="daynote">${esc(d.notes)}</p>` : '');
-  return `<div class="screen" style="gap:var(--space-xl)">${syncBanner()}${pageHead(true)}
+    : '';
+  return `<div class="screen it-screen" style="gap:var(--space-xl)">${syncBanner()}${pageHead(true)}
     <nav class="daystrip" aria-label="Days">${tabs}</nav>
     <div class="it-grid">
       <div class="plan">
-        <div class="dayhead"><div><h2 style="font-size:var(--text-display)">${esc(d.city) || 'Where to?'}</h2><p>Day ${i + 1}, ${dLong(d.date)}</p></div>
+        <div class="dayhead"><div><h2 style="font-size:var(--text-display)">${esc(d.city) || 'Where to?'}</h2><p>Day ${i + 1}, ${dLong(d.date)}</p>${!S.editDay && d.notes ? `<p class="daynote">${esc(d.notes)}</p>` : ''}</div>
           <div class="chips"><button type="button" class="btn" data-act="editday" aria-pressed="${!!S.editDay}">${I('pen','sm')}Edit day</button><button type="button" class="btn btn--primary" data-act="dialog" data-d="add">${I('plus','sm')}Add to this day</button></div></div>
         ${i === ti ? nextUp(i) : ''}
         ${editDay}
