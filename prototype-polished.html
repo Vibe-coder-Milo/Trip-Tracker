@@ -34,7 +34,7 @@
   --color-accent: oklch(47% 0.1 195); --color-accent-strong: oklch(40% 0.09 195); --color-accent-ink: oklch(99% 0.004 195); --color-accent-wash: oklch(95.5% 0.028 195); --color-focus: oklch(50% 0.15 250);
   --color-card: oklch(99.9% 0.002 235); --color-card-edge: oklch(86% 0.01 245); --color-pencil: oklch(43% 0.016 255);
   --card-lit: oklch(99.9% 0.002 235); --card-shade: oklch(99.9% 0.002 235); --lit: oklch(99.9% 0.002 235 / 0.9);
-  --cat-air: oklch(50% 0.13 255); --cat-hotel: oklch(48% 0.13 300); --cat-sight: oklch(53% 0.18 8); --cat-food: oklch(60% 0.13 80); --cat-transport: oklch(50% 0.11 160); --cat-misc: oklch(50% 0.02 255);
+  --cat-air: oklch(50% 0.13 255); --cat-hotel: oklch(48% 0.13 300); --cat-sight: oklch(53% 0.18 8); --cat-food: oklch(60% 0.13 80); --cat-transport: oklch(50% 0.11 160); --cat-misc: oklch(50% 0.02 255); --cat-activity: oklch(52% 0.1 218);
   --font-display: "Newsreader", Georgia, serif; --font-body: "Hanken Grotesk", system-ui, sans-serif;
   --radius-card: 8px; --radius-pill: 6px; --rule-hair: 1px; --rule-head: 1px;
   --shadow-card: 0 1px 2px oklch(25% 0.02 255 / 0.06), 0 8px 24px -8px oklch(25% 0.02 255 / 0.18);
@@ -64,7 +64,7 @@
   --color-rule: oklch(32% 0.014 250); --color-edge: oklch(56% 0.016 250);
   --color-accent: oklch(76% 0.15 58); --color-accent-strong: oklch(83% 0.13 62); --color-accent-ink: oklch(20% 0.04 50); --color-accent-wash: oklch(30% 0.06 52); --color-focus: oklch(76% 0.13 245);
   --color-card: oklch(23% 0.016 250); --color-card-edge: oklch(34% 0.016 250); --color-pencil: oklch(74% 0.014 250);
-  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(74% 0.15 2); --cat-food: oklch(87% 0.14 95); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255);
+  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(74% 0.15 2); --cat-food: oklch(87% 0.14 95); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255); --cat-activity: oklch(80% 0.1 212);
   --color-error: oklch(72% 0.16 27); --color-success: oklch(76% 0.13 155); --color-warn: oklch(80% 0.12 75);
   --color-warn-wash: oklch(29% 0.05 75); --color-error-wash: oklch(29% 0.05 27);
   --color-map-sea: oklch(26% 0.035 235); --color-map-land: oklch(36% 0.012 250); --color-map-edge: oklch(46% 0.02 235); --color-map-arc: oklch(76% 0.15 58 / 0.75);
@@ -82,7 +82,7 @@
   --color-rule: oklch(32% 0.014 250); --color-edge: oklch(56% 0.016 250);
   --color-accent: oklch(76% 0.15 58); --color-accent-strong: oklch(83% 0.13 62); --color-accent-ink: oklch(20% 0.04 50); --color-accent-wash: oklch(30% 0.06 52); --color-focus: oklch(76% 0.13 245);
   --color-card: oklch(23% 0.016 250); --color-card-edge: oklch(34% 0.016 250); --color-pencil: oklch(74% 0.014 250);
-  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(74% 0.15 2); --cat-food: oklch(87% 0.14 95); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255);
+  --cat-air: oklch(73% 0.12 255); --cat-hotel: oklch(74% 0.12 305); --cat-sight: oklch(74% 0.15 2); --cat-food: oklch(87% 0.14 95); --cat-transport: oklch(76% 0.12 160); --cat-misc: oklch(72% 0.02 255); --cat-activity: oklch(80% 0.1 212);
   --color-error: oklch(72% 0.16 27); --color-success: oklch(76% 0.13 155); --color-warn: oklch(80% 0.12 75);
   --color-warn-wash: oklch(29% 0.05 75); --color-error-wash: oklch(29% 0.05 27);
   --color-map-sea: oklch(26% 0.035 235); --color-map-land: oklch(36% 0.012 250); --color-map-edge: oklch(46% 0.02 235); --color-map-arc: oklch(76% 0.15 58 / 0.75);
@@ -277,7 +277,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .bars .track { display: block; height: 8px; background: var(--color-paper-3); }
 .bars .fill { display: block; height: 100%; border-radius: 4px; background: var(--color-accent); }
 .bars .track { border-radius: 4px; }
-.c-air { --cat: var(--cat-air); } .c-hotel { --cat: var(--cat-hotel); } .c-sight, .c-attraction { --cat: var(--cat-sight); } .c-food { --cat: var(--cat-food); } .c-transport { --cat: var(--cat-transport); } .c-misc { --cat: var(--cat-misc); }
+.c-air { --cat: var(--cat-air); } .c-hotel { --cat: var(--cat-hotel); } .c-sight, .c-attraction { --cat: var(--cat-sight); } .c-food { --cat: var(--cat-food); } .c-transport { --cat: var(--cat-transport); } .c-activity { --cat: var(--cat-activity); } .c-misc { --cat: var(--cat-misc); }
 .bars .fill[class*="c-"] { background: var(--cat); } .cat-ic { color: var(--cat); }
 .bars .v { text-align: right; font-size: var(--text-sm); color: var(--color-ink); font-variant-numeric: tabular-nums; }
 .ov-day { display: grid; grid-template-columns: 8rem minmax(0, 1fr) auto; gap: var(--space-lg); padding-block: var(--space-lg); transition: background-color var(--dur-short) var(--ease-out); }
@@ -370,7 +370,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .tm-route { fill: none; stroke: var(--color-ink-2); stroke-width: 1.5; stroke-dasharray: 5 5; vector-effect: non-scaling-stroke; }
 .tm-pin { fill: var(--color-ink-2); stroke: var(--color-map-land); stroke-width: 2; vector-effect: non-scaling-stroke; }
 .tm-pin.cur { fill: var(--color-accent); }
-.tm-pin.c-attraction { fill: var(--cat-sight); } .tm-pin.c-food { fill: var(--cat-food); } .tm-pin.hotel { fill: var(--color-ink); }
+.tm-pin.c-attraction { fill: var(--cat-sight); } .tm-pin.c-food { fill: var(--cat-food); } .tm-pin.hotel { fill: var(--cat-hotel); }
 .tm-pin.new { fill: var(--color-card); stroke: var(--color-accent); }
 .tm-num { fill: var(--color-paper); font-family: var(--font-body); font-variant-numeric: tabular-nums; pointer-events: none; }
 .tm-num.dark { fill: var(--color-accent); }
@@ -452,7 +452,8 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .item-acts { display: flex; gap: var(--space-3xs); }
 .item-note { margin-top: var(--space-2xs); }
 .item-edit { display: flex; flex-direction: column; gap: var(--space-sm); margin-top: var(--space-xs); padding: var(--space-md); border-radius: var(--radius-card); background: var(--color-paper-2); }
-.badge.c-attraction, .badge.c-food { background: var(--cat); border-color: var(--cat); color: var(--color-accent-ink); }
+.badge.c-attraction, .badge.c-food, .badge.c-transport, .badge.c-activity, .badge.c-air, .badge.c-hotel { background: var(--cat); border-color: var(--cat); color: var(--color-card); }
+.badge .ic { stroke-width: 1.8; }
 .badge.plain { color: var(--color-ink-2); border-color: var(--color-edge); }
 .pchip .n.c-attraction, .pchip .n.c-food { background: var(--cat); color: var(--color-accent-ink); }
 .daynote { padding: var(--space-md) var(--space-lg); border-radius: var(--radius-card); background: var(--color-paper-2); color: var(--color-ink); }
@@ -508,7 +509,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .item.timed { grid-template-columns: 3.5rem 28px 32px minmax(0, 1fr) auto; }
 .pt { padding-top: var(--space-2xs); font-weight: 600; color: var(--color-ink); font-variant-numeric: tabular-nums; }
 .item.step .step-text { padding-top: var(--space-2xs); color: var(--color-ink-2); }
-.item.step .badge.plain, .ovrow.step .badge.plain { width: 32px; height: 32px; border-style: dashed; }
+.ovrow .badge .ic { width: 15px; height: 15px; }
 .planhint { margin-top: var(--space-sm); font-size: var(--text-sm); }
 .dayedit .details { margin-bottom: var(--space-md); }
 .dayedit .dayactions { margin-top: var(--space-md); }
@@ -530,6 +531,15 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
 .ovkey { display: flex; flex-direction: column; gap: var(--space-xs); margin-bottom: var(--space-md); }
 .keyb { width: 24px !important; height: 24px !important; margin-top: 0 !important; font-size: var(--text-xs); }
 @media (max-width: 40rem) { .item.timed { grid-template-columns: 3rem 24px 32px minmax(0, 1fr); } .item.timed .item-acts { grid-column: 4; } .ovrow { grid-template-columns: 2.75rem 22px 28px minmax(0, 1fr); } }
+
+.facts .cat-ic .ic, .item-name .cat-ic .ic, .ovtext .cat-ic .ic { color: var(--cat); }
+.rates { display: flex; flex-direction: column; gap: var(--space-sm); margin: 0; padding: var(--space-md) 0 0; border: 0; border-top: 1px solid var(--section-edge); min-width: 0; }
+.rates legend { padding: 0; font-weight: 600; color: var(--color-ink); }
+.raterow { display: grid; grid-template-columns: max-content minmax(6rem, 10rem) minmax(0, 1fr); gap: var(--space-sm); align-items: center; }
+.raterow label { color: var(--color-ink); font-variant-numeric: tabular-nums; }
+.raterow .sub { font-size: var(--text-sm); }
+.addtypes { flex-wrap: wrap; }
+.addtypes button { display: inline-flex; align-items: center; gap: var(--space-2xs); }
 
 /* ===== mockup control, not part of the design ===== */
 .proto { position: fixed; left: 50%; bottom: calc(var(--space-md) + env(safe-area-inset-bottom, 0px)); z-index: var(--z-tooltip); transform: translateX(-50%); display: flex; align-items: center; gap: var(--space-xs); max-width: calc(100% - 24px); padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) var(--space-md); border-radius: var(--radius-pill); background: var(--color-ink); color: var(--color-paper-3); font-size: var(--text-sm); box-shadow: var(--shadow-card); }
@@ -567,6 +577,7 @@ main { padding-block: var(--space-xl) var(--space-4xl); }
   <symbol id="i-print" viewBox="0 0 24 24"><path d="M7 9V3h10v6M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7z"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></symbol>
@@ -611,19 +622,19 @@ const TRIPS = [
 const P = (o) => Object.assign({ id: uid(), note:'' }, o);
 const hotel = (name, addr, lat, lon) => P({ type:'hotel', name, addr, lat, lon });
 const act = (category, name, addr, lat, lon, note = '') => P({ type:'activity', category, name, addr, lat, lon, note });
-const D = (date, city, notes, times, places) => ({ id: uid(), date, city, notes, times: times.map(([t, d]) => ({ t, d })), places });
+const D = (date, city, notes, times, places) => ({ id: uid(), date, city, notes, times: times.map(([t, d, kind]) => ({ t, d, kind: kind || 'transport' })), places });
 const GR = ['Hotel Gracery Shinjuku', '1-19-1 Kabukicho, Shinjuku City, Tokyo', 35.6946, 139.7022];
 const CE = ['Hotel The Celestine Kyoto Gion', '572 Yasaka-shimomachi, Higashiyama Ward, Kyoto', 34.9985, 135.7775];
 const TRIP = {
-  name:'Japan in Autumn', localCur:'JPY', base:'SGD',
+  name:'Japan in Autumn', localCur:'JPY', base:'SGD', rates:{ JPY:115 },
   days:[
     D('2026-11-20','Tokyo','Land early. Drop bags at the hotel, keep the first day light, early night.',
-      [['07:40','Keikyu line and JR Yamanote to Shinjuku, about 50 min (IC card)'],['15:00','Hotel check-in']],
+      [['07:40','Keikyu line and JR Yamanote to Shinjuku, about 50 min (IC card)'],['15:00','Hotel check-in','activity']],
       [ P({ type:'flight', name:'SQ 638 Singapore to Tokyo Haneda', dep:'22:35', arr:'06:30', note:'Booking ref 7KQ2LX, seats 42A and 42C, 2 bags of 30 kg' }), hotel(...GR),
         act('attraction','Shinjuku Gyoen National Garden','11 Naitomachi, Shinjuku City, Tokyo',35.6852,139.7100,'Autumn leaves should be near peak. ¥500 entry.'),
         act('food','Omoide Yokocho','1-2 Nishishinjuku, Shinjuku City, Tokyo',35.6931,139.6995,'Yakitori alley. Most stalls are cash only.') ]),
     D('2026-11-21','Tokyo','Shibuya Sky slot booked for 16:20, sunset is around 16:30.',
-      [['09:00','Walk to Meiji Jingu from Harajuku station'],['12:30','Lunch around Omotesando']],
+      [['09:00','Walk to Meiji Jingu from Harajuku station'],['12:30','Lunch around Omotesando','activity']],
       [ hotel(...GR),
         act('attraction','Meiji Jingu','1-1 Yoyogikamizonocho, Shibuya City, Tokyo',35.6764,139.6993,'Go early before the crowds.'),
         act('attraction','Takeshita Street','1 Jingumae, Shibuya City, Tokyo',35.6716,139.7031),
@@ -637,12 +648,12 @@ const TRIP = {
         act('attraction','Senso-ji','2-3-1 Asakusa, Taito City, Tokyo',35.7148,139.7967),
         act('food','Kissa Sabou, the kissaten a friend recommended','',null,null,'Search could not find it, so it needs a pin.') ]),
     D('2026-11-23','Hakone','Check whether the Hakone Freepass covers the Romancecar top-up.',
-      [['08:10','Odakyu Romancecar, Shinjuku to Hakone-Yumoto (85 min)'],['15:00','Ryokan check-in, dinner at 18:30']],
+      [['08:10','Odakyu Romancecar, Shinjuku to Hakone-Yumoto (85 min)'],['15:00','Ryokan check-in, dinner at 18:30','activity']],
       [ hotel('Hakone Ginyu','100-1 Miyanoshita, Hakone, Kanagawa',35.2367,139.0857),
         act('attraction','Owakudani','1251 Sengokuhara, Hakone, Kanagawa',35.2440,139.0196,'Try the black eggs.'),
         act('attraction','Lake Ashi sightseeing cruise','Togendai Port, Hakone, Kanagawa',35.2215,139.0057) ]),
     D('2026-11-24','Kyoto','Travel day. Forward the big luggage from Hakone with Yamato.',
-      [['09:20','Bus to Odawara, Shinkansen Hikari to Kyoto (2 h)'],['14:00','Hotel check-in']],
+      [['09:20','Bus to Odawara, Shinkansen Hikari to Kyoto (2 h)'],['14:00','Hotel check-in','activity']],
       [ hotel(...CE),
         act('attraction','Fushimi Inari Taisha','68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto',34.9671,135.7727,'Late afternoon light is better.'),
         act('food','Nishiki Market','609 Nishidaimonjicho, Nakagyo Ward, Kyoto',35.0050,135.7649) ]),
@@ -666,8 +677,15 @@ const PLACE_TIMES = { 'Shinjuku Gyoen National Garden':'13:00', 'Omoide Yokocho'
   'Tsukiji Outer Market':'08:30', 'teamLab Planets':'13:00', 'Senso-ji':'16:00', 'Owakudani':'11:00', 'Lake Ashi sightseeing cruise':'13:00', 'Fushimi Inari Taisha':'15:30', 'Nishiki Market':'18:30',
   'Arashiyama Bamboo Grove':'07:30', 'Kinkaku-ji':'10:30', 'Kiyomizu-dera':'18:00', 'Osaka Castle':'13:00', 'Dotonbori':'18:00' };
 TRIP.days.forEach(d => d.places.forEach(p => { if(p.type === 'activity') p.time = PLACE_TIMES[p.name] || ''; }));
-const RATES = { SGD:1, JPY:1/115, KRW:1/1050, EUR:1.44, GBP:1.70, USD:1.31, THB:1/26.5, MYR:0.29, AUD:0.86 };
-const CURS = Object.keys(RATES);
+const CUR_NAMES = { SGD:'Singapore dollar', JPY:'Japanese yen', KRW:'South Korean won', CNY:'Chinese yuan', HKD:'Hong Kong dollar', TWD:'New Taiwan dollar', MOP:'Macau pataca',
+  THB:'Thai baht', MYR:'Malaysian ringgit', IDR:'Indonesian rupiah', VND:'Vietnamese dong', PHP:'Philippine peso', KHR:'Cambodian riel', LAK:'Lao kip', MMK:'Myanmar kyat', BND:'Brunei dollar',
+  INR:'Indian rupee', LKR:'Sri Lankan rupee', NPR:'Nepalese rupee', MVR:'Maldivian rufiyaa', BDT:'Bangladeshi taka', AUD:'Australian dollar', NZD:'New Zealand dollar', FJD:'Fijian dollar',
+  USD:'US dollar', CAD:'Canadian dollar', MXN:'Mexican peso', BRL:'Brazilian real', ARS:'Argentine peso', CLP:'Chilean peso', PEN:'Peruvian sol', GBP:'British pound', EUR:'Euro',
+  CHF:'Swiss franc', SEK:'Swedish krona', NOK:'Norwegian krone', DKK:'Danish krone', ISK:'Icelandic krona', PLN:'Polish zloty', CZK:'Czech koruna', HUF:'Hungarian forint', RON:'Romanian leu',
+  TRY:'Turkish lira', GEL:'Georgian lari', AED:'UAE dirham', SAR:'Saudi riyal', QAR:'Qatari riyal', OMR:'Omani rial', JOD:'Jordanian dinar', ILS:'Israeli new shekel', EGP:'Egyptian pound',
+  MAD:'Moroccan dirham', ZAR:'South African rand', KES:'Kenyan shilling', TZS:'Tanzanian shilling', KZT:'Kazakhstani tenge', UZS:'Uzbekistani som', MNT:'Mongolian tugrik' };
+const CURS = Object.keys(CUR_NAMES);
+const ZERO_DEC = new Set(['JPY','KRW','VND','IDR','KHR','LAK','MMK','CLP','ISK','HUF','UZS','MNT','TZS']);
 const CATS = [
   { k:'Air ticket', ic:'plane', mode:'pax' }, { k:'Hotel', ic:'bed', mode:'nights' },
   { k:'Attractions', ic:'ticket', mode:'pax' }, { k:'Food', ic:'bowl', mode:'single' },
@@ -699,16 +717,21 @@ const S = {
   pretend:'before', screen:'home', day:0, mapMode:'day', sync:'synced', scale:1, dialog:null,
   mapFocus:null, mapPopup:null, picking:null,
   addType:'activity', addCat:'attraction', addMode:'search', q:'', picked:null, link:'', addDay:null, hFrom:null, hTo:null, fName:'', fDep:'', fArr:'', addNote:'', wiki:null,
-  draft:{ cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'2' }, editing:null,
-  editDay:false, scrollDay:false, theme:'auto', pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
+  draft:{ cat:'Hotel', desc:'', date:'2026-11-20', cur:'JPY', total:'', nights:'', unit:'', qty:'' }, editing:null,
+  editDay:false, scrollDay:false, sTime:'', sWhat:'', theme:'auto', pastForm:{ name:'', from:'', to:'', cities:'' }, editTime:null, undo:null, editItem:null, openDetails:false, expErr:null, addErr:null, hlCity:null, confirm:null, helperSet:true, showKey:false, openNotes:new Set(),
 };
 
 /* ===== helpers ===== */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const I = (name, cls = '') => `<svg class="ic ${cls}" aria-hidden="true"><use href="#i-${name}"/></svg>`;
-const SYM = { SGD:'S$', JPY:'¥', EUR:'€', GBP:'£', USD:'US$', AUD:'A$', MYR:'RM', THB:'฿' };
-function fmt(cur, n){ if(!isFinite(n)) return 'not set'; const dec = (cur === 'JPY' || cur === 'KRW') ? 0 : 2; return (SYM[cur] || cur + ' ') + Number(n).toLocaleString('en-SG', { minimumFractionDigits:dec, maximumFractionDigits:dec }); }
-const conv = (from, to, n) => n * (RATES[from] || 1) / (RATES[to] || 1);
+const SYM = { SGD:'S$', JPY:'¥', EUR:'€', GBP:'£', USD:'US$', AUD:'A$', NZD:'NZ$', HKD:'HK$', MYR:'RM', THB:'฿', KRW:'₩', CNY:'CN¥', TWD:'NT$', INR:'₹', PHP:'₱', VND:'₫' };
+function fmt(cur, n){ if(!isFinite(n)) return 'No rate yet'; const dec = ZERO_DEC.has(cur) ? 0 : 2; return (SYM[cur] || cur + ' ') + Number(n).toLocaleString('en-SG', { minimumFractionDigits:dec, maximumFractionDigits:dec }); }
+const rateOf = cur => cur === TRIP.base ? 1 : TRIP.rates[cur];
+const conv = (from, to, n) => { const a = rateOf(from), b = rateOf(to); return a && b ? n / a * b : NaN; };
+const fmtRate = n => Number(n).toLocaleString('en-SG', { maximumFractionDigits:4 });
+function tripCurs(){ const s = new Set([TRIP.localCur]); EXPENSES.forEach(e => s.add(e.cur)); s.delete(TRIP.base); return [...s]; }
+function rateLine(){ const l = tripCurs().filter(c => TRIP.rates[c]).map(c => `1 ${TRIP.base} = ${fmtRate(TRIP.rates[c])} ${c}`); return l.length ? `Using ${l.join(', ')} for this trip` : 'No exchange rate set yet'; }
+function changeBase(N){ const r = TRIP.rates, B = TRIP.base; if(N === B) return; const k = r[N]; const nr = {}; if(k){ Object.entries(r).forEach(([c, v]) => { if(c !== N) nr[c] = v / k; }); nr[B] = 1 / k; } TRIP.rates = nr; TRIP.base = N; }
 const today = () => S.pretend === 'during' ? new Date('2026-11-21T10:15:00') : new Date('2026-11-06T12:00:00');
 const isoLocal = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const dLong = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
@@ -726,12 +749,12 @@ function breakdown(e){
   if(m === 'nights' && e.nights) return `${e.nights} ${e.nights == 1 ? 'night' : 'nights'} at ${fmt(e.cur, e.total / e.nights)}`;
   return '';
 }
-function totals(){ const by = {}; let all = 0; EXPENSES.forEach(e => { const v = conv(e.cur, TRIP.base, expTotal(e)); by[e.cat] = (by[e.cat] || 0) + v; all += v; }); return { by, all }; }
+function totals(){ const by = {}; let all = 0; const missing = new Set(); let left = 0; EXPENSES.forEach(e => { const v = conv(e.cur, TRIP.base, expTotal(e)); if(!isFinite(v)){ missing.add(e.cur); left++; return; } by[e.cat] = (by[e.cat] || 0) + v; all += v; }); return { by, all, missing:[...missing], left }; }
 function numbering(){ const m = {}; let n = 0; TRIP.days.forEach(d => d.places.forEach(p => { if(p.type === 'activity') m[p.id] = ++n; })); return m; }
 function flightTime(p){ return p.arr && p.dep && p.arr < p.dep ? p.arr : p.dep; }
 function planOf(d){
   const places = d.places.map((p, pi) => ({ kind:'place', p, pi, t:p.time || '' })).filter(x => x.p.type === 'activity');
-  const extra = d.times.map((t, k) => ({ kind:'step', t:t.t, d:t.d, k }))
+  const extra = d.times.map((t, k) => ({ kind:'step', sk:t.kind || 'transport', t:t.t, d:t.d, k }))
     .concat(d.places.map((p, pi) => ({ p, pi })).filter(x => x.p.type === 'flight').map(x => ({ kind:'flight', p:x.p, pi:x.pi, t:flightTime(x.p) })));
   const timed = places.filter(x => x.t).concat(extra.filter(x => x.t)).sort((a, b) => a.t.localeCompare(b.t) || (a.kind === 'place' ? 1 : -1));
   const untimed = places.filter(x => !x.t).concat(extra.filter(x => !x.t));
@@ -938,13 +961,13 @@ function scrOverview(){
       if(e.kind === 'divider') return '<li class="anytime">Any time</li>';
       if(e.kind === 'place'){ const p = e.p; return `<li class="ovrow" data-day="${i}" data-pi="${e.pi}"><span class="pt">${e.t || ''}</span><button type="button" class="handle" data-drag="ov" data-day="${i}" data-idx="${e.pi}" aria-label="Drag ${esc(p.name)} to reorder or move">${I('grip')}</button><span class="badge c-${p.category}">${nums[p.id]}</span><div class="ovtext"><b><span class="cat-ic c-${p.category}">${I(placeIcon(p),'sm')}</span>${esc(p.name)}</b>${p.note ? `<span class="ovnote">${esc(p.note)}</span>` : ''}</div></li>`; }
       const txt = e.kind === 'step' ? esc(e.d) : `${esc(e.p.name)}, ${e.t === e.p.arr ? 'lands' : 'departs'} ${e.t}`;
-      return `<li class="ovrow step"><span class="pt">${e.t || ''}</span><span></span><span class="badge plain">${I(e.kind === 'step' ? 'clock' : 'plane','sm')}</span><div class="ovtext"><span>${txt}</span></div></li>`;
+      return `<li class="ovrow step"><span class="pt">${e.t || ''}</span><span></span><span class="badge ${e.kind === 'step' ? 'c-' + e.sk : 'c-air'}">${I(e.kind === 'step' ? (e.sk === 'activity' ? 'flag' : 'train') : 'plane','sm')}</span><div class="ovtext"><span>${txt}</span></div></li>`;
     }).join('');
     return `<li class="ov-day" data-day="${i}">
       <div class="ov-when"><b>Day ${i + 1}</b><span>${dMid(d.date)}</span>${i === ti ? '<span class="now">Today</span>' : ''}</div>
       <div class="ov-body">
         <h3><button type="button" class="row-open" data-act="day" data-i="${i}">${esc(d.city) || 'Where to?'}</button></h3>
-        ${hotels.length ? `<ul class="facts">${hotels.map(h => `<li>${I('bed','sm')}${esc(h)}</li>`).join('')}</ul>` : ''}
+        ${hotels.length ? `<ul class="facts">${hotels.map(h => `<li><span class="cat-ic c-hotel">${I('bed','sm')}</span>${esc(h)}</li>`).join('')}</ul>` : ''}
         ${d.notes ? `<p class="ovdaynote">${esc(d.notes)}</p>` : ''}
         ${plan.length ? `<ol class="ovplan">${rows}</ol>` : '<p class="sub">Nothing planned yet. Drop a place here from another day.</p>'}
       </div>
@@ -953,11 +976,11 @@ function scrOverview(){
   }).join('');
   return `<div class="screen">${syncBanner()}${pageHead()}
     <section class="summary box" aria-labelledby="h-spent">
-      <div><h2 id="h-spent" class="visually-hidden">Spending</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">Example rate: S$1 = ¥115</p></div>
+      <div><h2 id="h-spent" class="visually-hidden">Spending</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">${rateLine()}</p></div>
       <dl class="bars">${cats.map(c => `<dt><span class="cat-ic c-${CATKEY[c.k]}">${I(c.ic,'sm')}</span>${c.k}</dt><dd><span class="track"><span class="fill c-${CATKEY[c.k]}" style="width:${(t.by[c.k] / t.all * 100).toFixed(1)}%"></span></span></dd><dd class="v">${fmt(TRIP.base, t.by[c.k])}</dd>`).join('')}</dl>
     </section>
     <section aria-labelledby="h-days"><div class="sechead"><h2 id="h-days">Day by day</h2><button type="button" class="btn btn--quiet" data-act="toast" data-m="Opens the print dialog so you can save this overview as a PDF in the real app.">${I('print','sm')}Save as PDF</button></div>
-      <div class="ovkey"><ul class="legend" aria-label="Key"><li><span class="badge c-attraction keyb">1</span>Sight</li><li><span class="badge c-food keyb">2</span>Food</li><li><span class="badge plain keyb">${I('clock','sm')}</span>Timed step, such as a train, a meal or a check-in</li></ul>
+      <div class="ovkey"><ul class="legend" aria-label="Key"><li><span class="badge c-attraction keyb">1</span>Sight</li><li><span class="badge c-food keyb">2</span>Food</li><li><span class="badge c-activity keyb">${I('flag','sm')}</span>Activity</li><li><span class="badge c-transport keyb">${I('train','sm')}</span>Transport</li><li><span class="badge c-air keyb">${I('plane','sm')}</span>Flight</li><li><span class="badge c-hotel keyb">${I('bed','sm')}</span>Hotel</li></ul>
       <p class="sub">The plan reads in time order. Drag a place by its handle onto another day to move it there. The arrows move a whole day; dates stay in order.</p></div>
       <ol class="daylist">${days}</ol></section></div>`;
 }
@@ -966,7 +989,7 @@ function scrOverview(){
 function itemHTML(p, i, pi, nums, t = null){
   const timed = t !== null;
   const sub = p.type === 'flight' ? `Departs ${p.dep}, arrives ${p.arr}` : p.type === 'hotel' ? `${dayList(hotelDays(p.name))}${p.addr ? '. ' + p.addr : ''}` : p.addr;
-  const badge = p.type === 'activity' ? `<span class="badge c-${p.category}">${nums[p.id]}</span>` : `<span class="badge plain">${I(placeIcon(p),'sm')}</span>`;
+  const badge = p.type === 'activity' ? `<span class="badge c-${p.category}">${nums[p.id]}</span>` : `<span class="badge ${p.type === 'flight' ? 'c-air' : 'c-hotel'}">${I(placeIcon(p),'sm')}</span>`;
   const editing = S.editItem === p.id;
   const noPin = p.type !== 'flight' && p.lat == null;
   const move = p.type === 'activity' ? `<div class="item-tools"><label for="mv${p.id}">Move to</label><select id="mv${p.id}" data-in="moveto" data-id="${p.id}">${TRIP.days.map((d, j) => `<option value="${j}" ${j === i ? 'selected' : ''}>Day ${j + 1}, ${esc(d.city)}</option>`).join('')}</select></div>` : '';
@@ -980,11 +1003,11 @@ function itemHTML(p, i, pi, nums, t = null){
     <span class="item-acts">${editing ? '' : `<button type="button" class="iconbtn" data-act="edititem" data-id="${p.id}" aria-label="Edit ${esc(p.name)}">${I('pen')}</button>`}<button type="button" class="iconbtn" data-act="delplace" data-id="${p.id}" aria-label="Remove ${esc(p.name)}">${I('x')}</button></span></li>`;
 }
 function stepHTML(e, i){
-  const k = e.k; const t = TRIP.days[i].times[k];
-  if(S.editTime === k) return `<li class="item timed step editing"><span class="pt"></span><span></span><span class="badge plain">${I('clock','sm')}</span>
-    <div class="item-main"><div class="item-edit" style="margin-top:0"><div class="field" style="max-width:12rem"><label for="tt${k}">Time</label><input id="tt${k}" type="time" class="input num" data-in="ttime" data-k="${k}" value="${t.t}"></div>
+  const k = e.k; const t = TRIP.days[i].times[k]; const sk = t.kind || 'transport';
+  if(S.editTime === k) return `<li class="item timed step editing"><span class="pt"></span><span></span><span class="badge c-${sk}">${I(sk === 'activity' ? 'flag' : 'train','sm')}</span>
+    <div class="item-main"><div class="item-edit" style="margin-top:0"><div class="seg" role="group" aria-label="Kind of step"><button type="button" data-act="stepkind" data-k="${k}" data-v="activity" aria-pressed="${sk === 'activity'}">Activity</button><button type="button" data-act="stepkind" data-k="${k}" data-v="transport" aria-pressed="${sk === 'transport'}">Transport</button></div><div class="field" style="max-width:12rem"><label for="tt${k}">Time</label><input id="tt${k}" type="time" class="input num" data-in="ttime" data-k="${k}" value="${t.t}"></div>
     <div class="field"><label for="td${k}">What happens</label><textarea id="td${k}" class="input" rows="2" data-in="tdesc" data-k="${k}" placeholder="Grab to the airport, meet the driver in the lobby">${esc(t.d)}</textarea></div><div><button type="button" class="btn" data-act="donetime">Done</button></div></div></div><span></span></li>`;
-  return `<li class="item timed step"><span class="pt">${t.t || ''}</span><span></span><span class="badge plain">${I('clock','sm')}</span><div class="item-main"><div class="step-text">${esc(t.d) || '<span class="sub">No description</span>'}</div></div>
+  return `<li class="item timed step"><span class="pt">${t.t || ''}</span><span></span><span class="badge c-${sk}">${I(sk === 'activity' ? 'flag' : 'train','sm')}</span><div class="item-main"><div class="step-text">${esc(t.d) || '<span class="sub">No description</span>'}</div></div>
     <span class="item-acts"><button type="button" class="iconbtn" data-act="edittime" data-k="${k}" aria-label="Edit ${t.t || 'this step'}">${I('pen')}</button><button type="button" class="iconbtn" data-act="deltime" data-k="${k}" aria-label="Remove ${t.t || 'this step'}">${I('x')}</button></span></li>`;
 }
 function mapAside(){
@@ -1033,25 +1056,28 @@ function scrItinerary(){
           <div class="chips"><button type="button" class="btn" data-act="editday" aria-pressed="${!!S.editDay}">${I('pen','sm')}Edit day</button><button type="button" class="btn btn--primary" data-act="dialog" data-d="add">${I('plus','sm')}Add to this day</button></div></div>
         ${i === ti ? nextUp(i) : ''}
         ${editDay}
-        <section class="box" aria-labelledby="h-plan"><div class="sechead"><h3 id="h-plan">${I('clock')}Plan for the day</h3><button type="button" class="link" data-act="addtime">${I('plus','sm')}Add a step</button></div>
+        <section class="box" aria-labelledby="h-plan"><div class="sechead"><h3 id="h-plan">${I('clock')}Plan for the day</h3><button type="button" class="link" data-act="dialog" data-d="add" data-t="move">${I('plus','sm')}Add an activity or transport</button></div>
           ${plan.length ? `<ul class="ruled">${rows}</ul>` : `<p class="empty">Nothing planned yet. Add a place, or a step such as a train or a check-in.</p>`}
-          <p class="sub planhint">Anything with a time sits in time order. Places without a time go under Any time, in the order you drag them.</p></section>
+          <p class="sub planhint">Everything with a time sits in time order. Places without a time go under Any time, in the order you drag them.</p></section>
         <section class="box" aria-labelledby="h-st"><div class="sechead"><h3 id="h-st">${I('bed')}Where you stay</h3></div>${hotels.length ? `<ul class="ruled">${hotels.map(({ p, pi }) => itemHTML(p, i, pi, nums)).join('')}</ul>` : '<p class="empty">No hotel yet. Add one with the button above.</p>'}</section>
       </div>
       ${mapAside()}
     </div></div>`;
 }
 function addPanelHTML(i){
-  const t = S.addType; const di = S.addDay != null ? S.addDay : i;
+  const t = S.addType; const di = S.addDay != null ? S.addDay : i; const step = t === 'do' || t === 'move';
   const dayOpts = sel => TRIP.days.map((d, j) => `<option value="${j}" ${j === sel ? 'selected' : ''}>Day ${j + 1}, ${dShort(d.date)}, ${esc(d.city)}</option>`).join('');
+  const dayField = `<div class="field"><label for="aday">Day</label><select id="aday" class="input" data-in="aday">${dayOpts(di)}</select></div>`;
   let main;
-  if(t === 'flight'){
+  if(step){
+    main = `<div class="grid2"><div class="field"><label for="stime">Time</label><input id="stime" type="time" class="input num" data-in="stime" value="${S.sTime}"></div>${dayField}</div>
+      <div class="field"><label for="swhat">${t === 'do' ? 'What is it?' : 'Route or details'}</label><input id="swhat" class="input" data-in="swhat" value="${esc(S.sWhat)}" placeholder="${t === 'do' ? 'Cooking class, hotel check-in, lunch' : 'JR Yamanote to Shinjuku, about 25 min'}"></div>
+      <p class="sub">${t === 'do' ? 'For things without a map pin: a class, a check-in, a meal booking.' : 'Trains, buses, taxis and walks between places.'}</p>`;
+  } else if(t === 'flight'){
     main = `<div class="field"><label for="fname">Flight</label><input id="fname" class="input" data-in="fname" value="${esc(S.fName)}" placeholder="SQ12 Singapore to Tokyo"></div>
-      <div class="grid2"><div class="field"><label for="fdep">Departs</label><input id="fdep" type="time" class="input num" data-in="fdep" value="${S.fDep}"></div><div class="field"><label for="farr">Arrives</label><input id="farr" type="time" class="input num" data-in="farr" value="${S.fArr}"></div></div>
-      <div class="field"><label for="aday">Day</label><select id="aday" class="input" data-in="aday">${dayOpts(di)}</select></div>`;
+      <div class="grid2"><div class="field"><label for="fdep">Departs</label><input id="fdep" type="time" class="input num" data-in="fdep" value="${S.fDep}"></div><div class="field"><label for="farr">Arrives</label><input id="farr" type="time" class="input num" data-in="farr" value="${S.fArr}"></div></div>${dayField}`;
   } else {
     const how = `<div class="seg" role="group" aria-label="How to find it"><button type="button" data-act="amode" data-m="search" aria-pressed="${S.addMode === 'search'}">Search by name</button><button type="button" data-act="amode" data-m="link" aria-pressed="${S.addMode === 'link'}">Paste a Google Maps link</button></div>`;
-    const q = S.q.trim().toLowerCase();
     const finder = S.addMode === 'search'
       ? `<div class="field"><label for="aq">${t === 'hotel' ? 'Hotel name' : 'Place name'}</label><input id="aq" class="input" data-in="aq" value="${esc(S.q)}" placeholder="Ichiran" autocomplete="off"></div><div id="ares">${searchResHTML()}</div>`
       : `<div class="field"><label for="alink">Google Maps link</label><textarea id="alink" class="input" rows="2" data-in="alink" placeholder="https://maps.app.goo.gl/">${esc(S.link)}</textarea></div>
@@ -1059,15 +1085,16 @@ function addPanelHTML(i){
     const cat = t === 'activity' ? `<div class="field"><span class="label" id="lbl-cat">Type</span><div class="chips" role="group" aria-labelledby="lbl-cat"><button type="button" class="chip" data-act="acat" data-c="attraction" aria-pressed="${S.addCat === 'attraction'}"><span class="cat-ic c-sight">${I('pin','sm')}</span>Sight</button><button type="button" class="chip" data-act="acat" data-c="food" aria-pressed="${S.addCat === 'food'}"><span class="cat-ic c-food">${I('bowl','sm')}</span>Food to try</button></div></div>` : '';
     const days = t === 'hotel'
       ? `<div class="grid2"><div class="field"><label for="hfrom">First night</label><select id="hfrom" class="input" data-in="hfrom">${dayOpts(S.hFrom ?? di)}</select></div><div class="field"><label for="hto">Last night</label><select id="hto" class="input" data-in="hto">${dayOpts(S.hTo ?? di)}</select></div></div><p class="sub">The hotel is added to every day from the first night to the last.</p>`
-      : `<div class="field"><label for="aday">Day</label><select id="aday" class="input" data-in="aday">${dayOpts(di)}</select></div>`;
+      : dayField;
     main = `${cat}${how}${finder}${days}`;
   }
-  return `<div class="seg" role="group" aria-label="What to add"><button type="button" data-act="atype" data-t="activity" aria-pressed="${t === 'activity'}">Place</button><button type="button" data-act="atype" data-t="hotel" aria-pressed="${t === 'hotel'}">Hotel</button><button type="button" data-act="atype" data-t="flight" aria-pressed="${t === 'flight'}">Flight</button></div>
+  const tb = (k, ic, cls, label) => `<button type="button" data-act="atype" data-t="${k}" aria-pressed="${t === k}"><span class="cat-ic ${cls}">${I(ic,'sm')}</span>${label}</button>`;
+  return `<div class="seg addtypes" role="group" aria-label="What to add">${tb('activity','pin','c-sight','Place')}${tb('do','flag','c-activity','Activity')}${tb('move','train','c-transport','Transport')}${tb('hotel','bed','c-hotel','Hotel')}${tb('flight','plane','c-air','Flight')}</div>
     ${main}
-    <div class="field"><label for="anote">Note</label><textarea id="anote" class="input" rows="2" data-in="anote" placeholder="${t === 'flight' ? 'Booking reference, seat, terminal, bags' : 'Why you picked it, what to order'}">${esc(S.addNote)}</textarea>
-      ${t !== 'flight' ? `<div><button type="button" class="link" data-act="wiki">Fill in a description from Wikipedia</button></div>` : ''}<div id="wikires">${S.wiki ? `<p class="desc">${esc(S.wiki)}</p>` : ''}</div></div>
-    ${S.addErr ? `<p class="formerr" role="alert">${I('alert','sm')}${esc(S.addErr)}</p>` : ''}<div><button type="button" class="btn btn--primary" data-act="addplace">${t === 'flight' ? 'Add the flight' : t === 'hotel' ? 'Add the hotel' : 'Add the place'}</button></div>
-    <p class="sub">Searching with Google Places, using your key.</p>`;
+    ${step ? '' : `<div class="field"><label for="anote">Note</label><textarea id="anote" class="input" rows="2" data-in="anote" placeholder="${t === 'flight' ? 'Booking reference, seat, terminal, bags' : 'Why you picked it, what to order'}">${esc(S.addNote)}</textarea>
+      ${t !== 'flight' ? `<div><button type="button" class="link" data-act="wiki">Fill in a description from Wikipedia</button></div>` : ''}<div id="wikires">${S.wiki ? `<p class="desc">${esc(S.wiki)}</p>` : ''}</div></div>`}
+    ${S.addErr ? `<p class="formerr" role="alert">${I('alert','sm')}${esc(S.addErr)}</p>` : ''}<div><button type="button" class="btn btn--primary" data-act="addplace">${({ flight:'Add the flight', hotel:'Add the hotel', do:'Add the activity', move:'Add the transport' })[t] || 'Add the place'}</button></div>
+    ${step || t === 'flight' ? '' : '<p class="sub">Searching with Google Places, using your key.</p>'}`;
 }
 function searchResHTML(){
   const q = S.q.trim().toLowerCase();
@@ -1080,14 +1107,16 @@ function searchResHTML(){
 /* ===== Budget ===== */
 function draftPreview(){
   const d = S.draft; const m = catOf(d.cat).mode; const tb = TRIP.base;
-  if(m === 'nights'){ const tot = parseFloat(d.total), n = parseInt(d.nights); if(!(tot > 0)) return { empty:true, big:'Enter the total and the number of nights' }; if(!(n > 0)) return { big:fmt(d.cur, tot), small:'Add the number of nights to see the price per night' }; return { big:`${fmt(d.cur, tot / n)} a night`, small:`${fmt(d.cur, tot)} for ${n} ${n === 1 ? 'night' : 'nights'}${d.cur !== tb ? `, about ${fmt(tb, conv(d.cur, tb, tot / n))} a night` : ''}` }; }
-  if(m === 'pax'){ const u = parseFloat(d.unit), q = parseInt(d.qty) > 0 ? parseInt(d.qty) : 1; if(!(u > 0)) return { empty:true, big:'Enter the price for one person' }; return { big:`${fmt(d.cur, u * q)} in all`, small:`${q} ${q === 1 ? 'person' : 'people'} × ${fmt(d.cur, u)}${d.cur !== tb ? `, about ${fmt(tb, conv(d.cur, tb, u * q))}` : ''}` }; }
-  const tot = parseFloat(d.total); if(!(tot > 0)) return { empty:true, big:'Enter the amount' }; return { big:fmt(d.cur, tot), small:d.cur !== tb ? `About ${fmt(tb, conv(d.cur, tb, tot))}` : '' };
+  if(m === 'nights'){ const tot = parseFloat(d.total), n = parseInt(d.nights); if(!(tot > 0)) return { empty:true, big:'Enter the total and the number of nights' }; if(!(n > 0)) return { big:fmt(d.cur, tot), small:'Add the number of nights to see the price per night' }; return { big:`${fmt(d.cur, tot / n)} a night`, small:`${fmt(d.cur, tot)} for ${n} ${n === 1 ? 'night' : 'nights'}${d.cur !== tb ? `${isFinite(conv(d.cur, tb, 1)) ? `, about ${fmt(tb, conv(d.cur, tb, tot / n))} a night` : `. Add a ${d.cur} rate to see it in ${tb}`}` : ''}` }; }
+  if(m === 'pax'){ const u = parseFloat(d.unit), q = parseInt(d.qty); if(!(u > 0)) return { empty:true, big:'Enter the price for one person and how many people' }; if(!(q > 0)) return { big:`${fmt(d.cur, u)} each`, small:'Add how many people to see the total' }; const sg = conv(d.cur, tb, u * q); return { big:`${fmt(d.cur, u * q)} in all`, small:`${q} ${q === 1 ? 'person' : 'people'} × ${fmt(d.cur, u)}${d.cur !== tb ? (isFinite(sg) ? `, about ${fmt(tb, sg)}` : `. Add a ${d.cur} rate to see it in ${tb}`) : ''}` }; }
+  const tot = parseFloat(d.total); if(!(tot > 0)) return { empty:true, big:'Enter the amount' }; return { big:fmt(d.cur, tot), small:d.cur !== tb ? (isFinite(conv(d.cur, tb, tot)) ? `About ${fmt(tb, conv(d.cur, tb, tot))}` : `Add a ${d.cur} rate to see it in ${tb}`) : '' };
 }
 function calcHTML(){ const p = draftPreview(); return `<div class="calc ${p.empty ? 'empty' : ''}" id="calc" aria-live="polite"><span class="big">${esc(p.big)}</span>${p.small ? `<span class="small">${esc(p.small)}</span>` : ''}</div>`; }
 function scrBudget(){
   const t = totals(); const d = S.draft; const m = catOf(d.cat).mode; const editing = S.editing ? EXPENSES.find(e => e.id === S.editing) : null;
-  const curSel = (id, val, attr) => `<select id="${id}" class="input" ${attr}>${CURS.map(c => `<option ${c === val ? 'selected' : ''}>${c}</option>`).join('')}</select>`;
+  const used = [...new Set([TRIP.base, TRIP.localCur, ...EXPENSES.map(e => e.cur)])];
+  const opt = (c, val) => `<option value="${c}" ${c === val ? 'selected' : ''}>${c}, ${esc(CUR_NAMES[c] || c)}</option>`;
+  const curSel = (id, val, attr) => `<select id="${id}" class="input" ${attr}><optgroup label="On this trip">${used.map(c => opt(c, val)).join('')}</optgroup><optgroup label="All currencies">${CURS.filter(c => !used.includes(c)).map(c => opt(c, val)).join('')}</optgroup></select>`;
   const amount = m === 'nights'
     ? `<div class="grid3"><div class="field"><label for="ftotal">Total for the stay</label><input id="ftotal" class="input num" ${S.expErr && S.expErr.f === 'ftotal' ? 'aria-invalid="true" aria-describedby="experr"' : ''} inputmode="decimal" data-f="total" value="${esc(d.total)}" ></div><div class="field"><label for="fnights">Nights</label><input id="fnights" class="input num" ${S.expErr && S.expErr.f === 'fnights' ? 'aria-invalid="true" aria-describedby="experr"' : ''} inputmode="numeric" data-f="nights" value="${esc(d.nights)}" ></div><div class="field"><label for="fcur">Currency</label>${curSel('fcur', d.cur, 'data-f="cur"')}</div></div>`
     : m === 'pax'
@@ -1097,9 +1126,11 @@ function scrBudget(){
     <td><span class="acts"><button type="button" class="btn btn--quiet" data-act="editexp" data-id="${e.id}">Edit</button><button type="button" class="iconbtn" data-act="delexp" data-id="${e.id}" aria-label="Delete ${esc(e.desc)}">${I('x')}</button></span></td></tr>`).join('');
   return `<div class="screen">${syncBanner()}${pageHead()}
     <div class="bud-top">
-      <section class="box" aria-labelledby="h-tot" style="display:flex;flex-direction:column;gap:var(--space-lg)"><div><h2 id="h-tot" class="visually-hidden">Total</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">Example rate: S$1 = ¥115. The real app uses live rates.</p></div>
+      <section class="box" aria-labelledby="h-tot" style="display:flex;flex-direction:column;gap:var(--space-lg)"><div><h2 id="h-tot" class="visually-hidden">Total</h2><p class="sub">Spent so far, in ${TRIP.base}</p><p class="figure">${fmt(TRIP.base, t.all)}</p><p class="sub">${rateLine()}</p>${t.left ? `<p class="formerr">${I('alert','sm')}${t.left} ${t.left === 1 ? 'expense is' : 'expenses are'} left out until you add a rate for ${t.missing.join(' and ')}.</p>` : ''}</div>
         <dl class="bars">${CATS.filter(c => t.by[c.k]).map(c => `<dt><span class="cat-ic c-${CATKEY[c.k]}">${I(c.ic,'sm')}</span>${c.k}</dt><dd><span class="track"><span class="fill c-${CATKEY[c.k]}" style="width:${(t.by[c.k] / t.all * 100).toFixed(1)}%"></span></span></dd><dd class="v">${fmt(TRIP.base, t.by[c.k])}</dd>`).join('')}</dl>
-        <div class="grid2"><div class="field"><label for="lcur">Local currency</label>${curSel('lcur', TRIP.localCur, 'data-in="lcur" aria-describedby="lcur-help"')}<span class="help" id="lcur-help">New expenses start in it</span></div><div class="field"><label for="bcur">Show totals in</label>${curSel('bcur', TRIP.base, 'data-in="bcur"')}</div></div></section>
+        <div class="grid2"><div class="field"><label for="lcur">Local currency</label>${curSel('lcur', TRIP.localCur, 'data-in="lcur" aria-describedby="lcur-help"')}<span class="help" id="lcur-help">New expenses start in it</span></div><div class="field"><label for="bcur">Show totals in</label>${curSel('bcur', TRIP.base, 'data-in="bcur"')}</div></div>
+        <fieldset class="rates"><legend>Exchange rate for this trip</legend><p class="sub">Set it once, for example from your money changer. Every total on this trip uses it; nothing changes with live rates.</p>
+          ${tripCurs().map(c => `<div class="raterow"><label for="rate-${c}">1 ${TRIP.base} =</label><input id="rate-${c}" class="input num" inputmode="decimal" data-rate="${c}" value="${TRIP.rates[c] ? fmtRate(TRIP.rates[c]).replace(/,/g, '') : ''}" ${TRIP.rates[c] ? '' : 'aria-invalid="true"'}><span>${c}<span class="sub"> ${esc(CUR_NAMES[c] || '')}</span></span></div>`).join('') || '<p class="sub">All expenses are in ' + TRIP.base + ', so no rate is needed.</p>'}</fieldset></section>
       <section class="panel" aria-labelledby="h-add"><div class="dialog-h"><h2 id="h-add">${editing ? 'Edit the expense' : 'Add an expense'}</h2>${editing ? '<button type="button" class="link" data-act="canceledit">Cancel</button>' : ''}</div>
         <form class="plan" style="gap:var(--space-md)" onsubmit="return false" data-form="exp">
           <div class="field"><span class="label" id="lbl-ecat">Category</span><div class="chips" role="group" aria-labelledby="lbl-ecat">${CATS.map(c => `<button type="button" class="chip" data-act="cat" data-c="${c.k}" aria-pressed="${d.cat === c.k}"><span class="cat-ic c-${CATKEY[c.k]}">${I(c.ic,'sm')}</span>${c.k}</button>`).join('')}</div></div>
@@ -1184,7 +1215,11 @@ function render(){
 /* ===== actions ===== */
 function addPlace(){
   const t = S.addType; const di = S.addDay != null ? S.addDay : S.day;
-  if(t === 'flight'){
+  if(t === 'do' || t === 'move'){
+    if(!S.sWhat.trim()){ S.addErr = t === 'do' ? 'Say what the activity is first.' : 'Add the route or details first.'; render(); return; }
+    TRIP.days[di].times.push({ t:S.sTime, d:S.sWhat.trim(), kind: t === 'do' ? 'activity' : 'transport' });
+    announce(`Added ${S.sWhat.trim()} to Day ${di + 1}`); S.sTime = ''; S.sWhat = '';
+  } else if(t === 'flight'){
     if(!S.fName.trim()){ S.addErr = 'Enter the flight name or number first.'; render(); return; }
     TRIP.days[di].places.unshift(P({ type:'flight', name:S.fName.trim(), dep:S.fDep || 'not set', arr:S.fArr || 'not set', note:S.addNote }));
     announce(`Added ${S.fName.trim()} to Day ${di + 1}`); S.fName = S.fDep = S.fArr = '';
@@ -1208,11 +1243,11 @@ function saveExpense(){
   const d = S.draft; const m = catOf(d.cat).mode;
   const e = S.editing ? EXPENSES.find(x => x.id === S.editing) : { id:uid() };
   const o = { cat:d.cat, desc:d.desc || d.cat, date:d.date, cur:d.cur };
-  if(m === 'pax'){ if(!(parseFloat(d.unit) > 0)){ S.expErr = { f:'funit', msg:'Enter the price for one person, then add the expense.' }; render(); document.getElementById('funit')?.focus(); return; } Object.assign(o, { unit:parseFloat(d.unit), qty:parseInt(d.qty) || 1, total:undefined, nights:undefined }); }
+  if(m === 'pax'){ if(!(parseFloat(d.unit) > 0)){ S.expErr = { f:'funit', msg:'Enter the price for one person, then add the expense.' }; render(); document.getElementById('funit')?.focus(); return; } if(!(parseInt(d.qty) > 0)){ S.expErr = { f:'fqty', msg:'Enter how many people, then add the expense.' }; render(); document.getElementById('fqty')?.focus(); return; } Object.assign(o, { unit:parseFloat(d.unit), qty:parseInt(d.qty), total:undefined, nights:undefined }); }
   else { if(!(parseFloat(d.total) > 0)){ S.expErr = { f:'ftotal', msg:m === 'nights' ? 'Enter the total for the stay, then add the expense.' : 'Enter the amount, then add the expense.' }; render(); document.getElementById('ftotal')?.focus(); return; } Object.assign(o, { total:parseFloat(d.total), nights:m === 'nights' ? (parseInt(d.nights) || null) : undefined, unit:undefined, qty:undefined }); }
   S.expErr = null; Object.assign(e, o); if(!S.editing) EXPENSES.unshift(e);
   announce(`${S.editing ? 'Saved' : 'Added'} ${e.desc}, ${fmt(e.cur, expTotal(e))}`);
-  S.editing = null; S.draft = { cat:d.cat, desc:'', date:d.date, cur:TRIP.localCur, total:'', nights:'', unit:'', qty:'2' }; render();
+  S.editing = null; S.draft = { cat:d.cat, desc:'', date:d.date, cur:TRIP.localCur, total:'', nights:'', unit:'', qty:'' }; render();
 }
 function confirmBox(title, body, yes, fn){ S.confirm = { title, body, yes, fn }; S.dialog = 'confirm'; render(); }
 
@@ -1231,7 +1266,7 @@ document.addEventListener('click', e => {
     case 'showkey': S.showKey = !S.showKey; break;
     case 'sz': S.scale = Math.max(.8, Math.min(1.5, +(S.scale + .1 * el.dataset.d).toFixed(1))); break;
     case 'toast': toast(el.dataset.m); return;
-    case 'dialog': S.dialog = el.dataset.d; S.addErr = null; break;
+    case 'dialog': S.dialog = el.dataset.d; S.addErr = null; if(el.dataset.t) S.addType = el.dataset.t; break;
     case 'close': case 'closebg': S.dialog = null; break;
     case 'confirmyes': { const fn = S.confirm.fn; S.dialog = null; fn(); } break;
     case 'hl': S.hlCity = S.hlCity === el.dataset.c ? null : el.dataset.c; break;
@@ -1249,6 +1284,7 @@ document.addEventListener('click', e => {
     case 'doneitem': S.editItem = null; break;
     case 'editday': S.editDay = !S.editDay; break;
     case 'doneday': S.editDay = false; break;
+    case 'stepkind': TRIP.days[S.day].times[+el.dataset.k].kind = el.dataset.v; break;
     case 'mapm': S.mapMode = el.dataset.m; S.mapFocus = null; S.mapPopup = null; break;
     case 'closepop': S.mapPopup = null; S.mapFocus = null; break;
     case 'mapday': S.screen = 'itinerary'; S.day = +el.dataset.i; S.mapMode = 'day'; S.mapFocus = null; S.mapPopup = null; break;
@@ -1309,6 +1345,7 @@ document.addEventListener('input', e => {
     case 'aq': S.q = t.value; S.picked = null; document.getElementById('ares').innerHTML = searchResHTML(); break;
     case 'alink': S.link = t.value; document.getElementById('alinkres').innerHTML = linkResHTML(); break;
     case 'fname': S.fName = t.value; break;
+    case 'swhat': S.sWhat = t.value; break;
     case 'anote': S.addNote = t.value; break;
   }
 });
@@ -1318,12 +1355,14 @@ document.addEventListener('change', e => {
   switch(t.dataset.in){
     case 'ddate': TRIP.days[S.day].date = t.value; render(); break;
     case 'fdep': S.fDep = t.value; break;
+    case 'stime': S.sTime = t.value; break;
     case 'farr': S.fArr = t.value; break;
     case 'aday': S.addDay = +t.value; break;
     case 'hfrom': S.hFrom = +t.value; break;
     case 'hto': S.hTo = +t.value; break;
     case 'lcur': TRIP.localCur = t.value; S.draft.cur = t.value; render(); break;
-    case 'bcur': TRIP.base = t.value; render(); break;
+    case 'bcur': changeBase(t.value); render(); break;
+    default: if(t.dataset.rate){ const v = parseFloat(t.value); if(v > 0) TRIP.rates[t.dataset.rate] = v; else delete TRIP.rates[t.dataset.rate]; render(); } break;
     case 'findplace': S.mapFocus = t.value || null; S.mapPopup = t.value || null; render(); break;
     case 'moveto': { const f = findPlace(t.dataset.id); const to = +t.value; f.d.places.splice(f.i, 1); TRIP.days[to].places.push(f.p); announce(`Moved ${f.p.name} to Day ${to + 1}`); render(); } break;
   }
