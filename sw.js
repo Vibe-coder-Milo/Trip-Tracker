@@ -1,7 +1,7 @@
-/* Trip Tracker offline support. The page itself is fetched fresh when online (so updates arrive) and
+/* Milo & Miles offline support. The page itself is fetched fresh when online (so updates arrive) and
    served from the cache when offline. Libraries, fonts and map tiles you've already seen are cached.
    Nothing from GitHub, Google or search is cached: those always go to the network. */
-const CORE = 'trip-tracker-core-v1', LIBS = 'trip-tracker-libs-v1', TILES = 'trip-tracker-tiles-v1';
+const CORE = 'milo-miles-core-v1', LIBS = 'milo-miles-libs-v1', TILES = 'milo-miles-tiles-v1';
 const CORE_URLS = ['./', './index.html', './manifest.webmanifest'];
 const LIB_URLS = ['https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css', 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'];
 const MAX_TILES = 600;

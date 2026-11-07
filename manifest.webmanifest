@@ -1,6 +1,6 @@
 {
-  "name": "Trip Tracker",
-  "short_name": "Trips",
+  "name": "Milo & Miles",
+  "short_name": "Milo & Miles",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
