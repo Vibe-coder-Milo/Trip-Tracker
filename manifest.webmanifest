@@ -1,0 +1,9 @@
+{
+  "name": "Trip Tracker",
+  "short_name": "Trips",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafb",
+  "theme_color": "#f8fafb"
+}
